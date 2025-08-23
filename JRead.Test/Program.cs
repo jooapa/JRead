@@ -6,14 +6,13 @@ public class Program
 {
     public static void Main(string[] args)
     {
-        var jr = new JRead();
         var opt = new JReadOptions
         {
-            History = ["first", "second", "third"],
             EnableDebug = false,
         };
-        string output = jr.ReadLine("kakka\non\nkakkaa", opt);
+        Console.SetCursorPosition(10, Console.GetCursorPosition().Top);
+        string output = JRead.Read("first\nsecond", opt);
 
-        Console.WriteLine($"Output: {output}");
+        Console.WriteLine($"\nOutput: {output}");
     }
 }

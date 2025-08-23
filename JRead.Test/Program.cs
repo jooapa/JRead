@@ -12,7 +12,7 @@ public class Program
             History = ["first", "second", "third"],
             EnableDebug = false,
         };
-        string output = jr.ReadLine("adsi\noj", opt);
+        string output = jr.ReadLine("kakka\non\nkakkaa", opt);
 
         Console.WriteLine($"Output: {output}");
     }

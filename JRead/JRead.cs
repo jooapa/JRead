@@ -26,6 +26,11 @@ public class JRead
         int suggestionIndex = -1; // -1 = user input, 0+ = suggestion index
         string originalInput = prefillText ?? "";
 
+        // Track rendering info for consistent multi-line handling
+        int startingCursorLeft = Console.CursorLeft;
+        int startingCursorTop = Console.CursorTop;
+        int maxNewlines = input.Count(c => c == '\n'); // Track max newlines seen
+
         // set options stuff ---
         if (options != null)
         {
@@ -48,7 +53,11 @@ public class JRead
             options = new JReadOptions();
         }
 
+        // Initial render of the input
         Console.Write(input);
+        
+        // Update max newlines after initial render
+        maxNewlines = Math.Max(maxNewlines, input.Count(c => c == '\n'));
 
         do
         {
@@ -61,36 +70,22 @@ public class JRead
             switch (key.Key)
             {
                 case ConsoleKey.Escape:
-                    // Clear the current input line and return empty
-                    Console.Write(new string('\b', input.Length));
-                    Console.Write(new string(' ', input.Length));
-                    Console.Write(new string('\b', input.Length));
+                    ClearInputLine(maxNewlines, startingCursorLeft, startingCursorTop);
                     return string.Empty;
 
                 case ConsoleKey.Backspace:
                     if (input.Length > 0 && cursorPosition > 0)
                     {
-                        // Reset suggestion index when user starts typing
-                        if (suggestionIndex != -1)
-                        {
-                            suggestionIndex = -1;
-                            originalInput = input;
-                        }
+                        ResetSuggestionIndex(ref suggestionIndex, ref originalInput, input);
 
                         // Remove single character before cursor
                         input = input.Substring(0, cursorPosition - 1) + input.Substring(cursorPosition);
                         cursorPosition--;
 
-                        // Redraw the line
-                        Console.Write(new string('\b', input.Length + 1));
-                        Console.Write(new string(' ', input.Length + 1));
-                        Console.Write(new string('\b', input.Length + 1));
-                        Console.Write(input);
+                        // Update max newlines if necessary
+                        maxNewlines = Math.Max(maxNewlines, input.Count(c => c == '\n'));
 
-                        // Position cursor correctly
-                        int moveBack = input.Length - cursorPosition;
-                        if (moveBack > 0)
-                            Console.Write(new string('\b', moveBack));
+                        RedrawInputLine(input, cursorPosition, maxNewlines, startingCursorLeft, startingCursorTop);
                     }
                     break;
 
@@ -100,12 +95,7 @@ public class JRead
                     {
                         if (input.Length > 0 && cursorPosition > 0)
                         {
-                            // Reset suggestion index when user starts typing
-                            if (suggestionIndex != -1)
-                            {
-                                suggestionIndex = -1;
-                                originalInput = input;
-                            }
+                            ResetSuggestionIndex(ref suggestionIndex, ref originalInput, input);
 
                             // Local function to find the start of the current word
                             int FindWordStart(string text, int position)
@@ -135,16 +125,10 @@ public class JRead
                                 cursorPosition = wordStart;
                             }
 
-                            // Redraw the line
-                            Console.Write(new string('\b', input.Length + charactersToDelete));
-                            Console.Write(new string(' ', input.Length + charactersToDelete));
-                            Console.Write(new string('\b', input.Length + charactersToDelete));
-                            Console.Write(input);
+                            // Update max newlines if necessary
+                            maxNewlines = Math.Max(maxNewlines, input.Count(c => c == '\n'));
 
-                            // Position cursor correctly
-                            int moveBack = input.Length - cursorPosition;
-                            if (moveBack > 0)
-                                Console.Write(new string('\b', moveBack));
+                            RedrawInputLine(input, cursorPosition, maxNewlines, startingCursorLeft, startingCursorTop);
                         }
                     }
                     else
@@ -157,24 +141,15 @@ public class JRead
                 case ConsoleKey.Delete:
                     if (cursorPosition < input.Length)
                     {
-                        // Reset suggestion index when user starts typing
-                        if (suggestionIndex != -1)
-                        {
-                            suggestionIndex = -1;
-                            originalInput = input;
-                        }
+                        ResetSuggestionIndex(ref suggestionIndex, ref originalInput, input);
 
                         // Remove character at cursor position
                         input = input.Substring(0, cursorPosition) + input.Substring(cursorPosition + 1);
 
-                        // Redraw the line
-                        Console.Write(new string('\b', cursorPosition));
-                        Console.Write(input);
-                        Console.Write(" "); // Clear the last character
+                        // Update max newlines if necessary
+                        maxNewlines = Math.Max(maxNewlines, input.Count(c => c == '\n'));
 
-                        // Position cursor correctly
-                        int moveBack = input.Length - cursorPosition + 1;
-                        Console.Write(new string('\b', moveBack));
+                        RedrawInputLine(input, cursorPosition, maxNewlines, startingCursorLeft, startingCursorTop);
                     }
                     break;
 
@@ -182,7 +157,9 @@ public class JRead
                     if (cursorPosition > 0)
                     {
                         cursorPosition--;
-                        Console.Write('\b');
+                        
+                        // Just redraw the entire input to ensure cursor is positioned correctly
+                        RedrawInputLine(input, cursorPosition, maxNewlines, startingCursorLeft, startingCursorTop);
                     }
                     break;
 
@@ -190,7 +167,9 @@ public class JRead
                     if (cursorPosition < input.Length)
                     {
                         cursorPosition++;
-                        Console.Write(input[cursorPosition - 1]);
+                        
+                        // Just redraw the entire input to ensure cursor is positioned correctly
+                        RedrawInputLine(input, cursorPosition, maxNewlines, startingCursorLeft, startingCursorTop);
                     }
                     break;
 
@@ -198,8 +177,8 @@ public class JRead
                     // Move cursor to beginning of input
                     if (cursorPosition > 0)
                     {
-                        Console.Write(new string('\b', cursorPosition));
                         cursorPosition = 0;
+                        RedrawInputLine(input, cursorPosition, maxNewlines, startingCursorLeft, startingCursorTop);
                     }
                     break;
 
@@ -207,8 +186,8 @@ public class JRead
                     // Move cursor to end of input
                     if (cursorPosition < input.Length)
                     {
-                        Console.Write(input.Substring(cursorPosition));
                         cursorPosition = input.Length;
+                        RedrawInputLine(input, cursorPosition, maxNewlines, startingCursorLeft, startingCursorTop);
                     }
                     break;
 
@@ -228,7 +207,7 @@ public class JRead
                             suggestionIndex = 0; // Wrap to first suggestion
                         }
 
-                        ReplaceInputField(options.History[suggestionIndex], ref input, ref cursorPosition);
+                        ReplaceInputField(options.History[suggestionIndex], ref input, ref cursorPosition, ref maxNewlines, startingCursorLeft, startingCursorTop);
                     }
                     break;
 
@@ -251,11 +230,11 @@ public class JRead
                         if (suggestionIndex == -1)
                         {
                             // Restore original user input
-                            ReplaceInputField(originalInput, ref input, ref cursorPosition);
+                            ReplaceInputField(originalInput, ref input, ref cursorPosition, ref maxNewlines, startingCursorLeft, startingCursorTop);
                         }
                         else
                         {
-                            ReplaceInputField(options.History[suggestionIndex], ref input, ref cursorPosition);
+                            ReplaceInputField(options.History[suggestionIndex], ref input, ref cursorPosition, ref maxNewlines, startingCursorLeft, startingCursorTop);
                         }
                     }
                     break;
@@ -267,39 +246,169 @@ public class JRead
                 default:
                     if (!char.IsControl(key.KeyChar))
                     {
-                        // Reset suggestion index when user starts typing
-                        if (suggestionIndex != -1)
-                        {
-                            suggestionIndex = -1;
-                            originalInput = input;
-                        }
+                        ResetSuggestionIndex(ref suggestionIndex, ref originalInput, input);
 
                         // Insert character at cursor position
                         input = input.Substring(0, cursorPosition) + key.KeyChar + input.Substring(cursorPosition);
                         cursorPosition++;
 
-                        // Redraw from cursor position
-                        Console.Write(input.Substring(cursorPosition - 1));
+                        // Update max newlines if necessary
+                        maxNewlines = Math.Max(maxNewlines, input.Count(c => c == '\n'));
 
-                        // Position cursor correctly
-                        int moveBack = input.Length - cursorPosition;
-                        if (moveBack > 0)
-                            Console.Write(new string('\b', moveBack));
+                        RedrawInputLine(input, cursorPosition, maxNewlines, startingCursorLeft, startingCursorTop);
                     }
                     break;
             }
         } while (true);
     }
 
-    private static void ReplaceInputField(string newText, ref string input, ref int cursorPosition)
+    private static void ResetSuggestionIndex(ref int suggestionIndex, ref string originalInput, string currentInput)
     {
-        // Clear current input from console
-        Console.Write(new string('\b', input.Length));
-        Console.Write(new string(' ', input.Length));
-        Console.Write(new string('\b', input.Length));
+        if (suggestionIndex != -1)
+        {
+            suggestionIndex = -1;
+            originalInput = currentInput;
+        }
+    }
+
+    private static void RedrawInputLine(string input, int cursorPosition, int maxNewlines, int startingLeft, int startingTop)
+    {
+        // Bounds checking for starting position
+        if (startingTop < 0 || startingTop >= Console.BufferHeight || startingLeft < 0 || startingLeft >= Console.WindowWidth)
+        {
+            return; // Can't draw if starting position is invalid
+        }
+        
+        // Calculate how many lines are available from the starting position
+        int availableLines = Console.BufferHeight - startingTop;
+        
+        // Split input into lines to see what we're working with
+        var inputLines = input.Split('\n');
+        int inputLinesCount = inputLines.Length;
+        
+        // Determine how many lines we can safely clear and draw
+        int linesToClear = Math.Min(maxNewlines + 1, availableLines);
+        int linesToDraw = Math.Min(inputLinesCount, availableLines);
+        
+        // Go to starting position
+        Console.CursorLeft = startingLeft;
+        Console.CursorTop = startingTop;
+        
+        // Clear the lines we might have used (but only what fits)
+        for (int i = 0; i < linesToClear; i++)
+        {
+            int clearWidth = Math.Min(Console.WindowWidth - startingLeft, Console.WindowWidth - 1);
+            Console.Write(new string(' ', clearWidth));
+            if (i < linesToClear - 1 && Console.CursorTop + 1 < Console.BufferHeight)
+            {
+                Console.WriteLine();
+            }
+        }
+        
+        // Go back to starting position
+        Console.CursorLeft = startingLeft;
+        Console.CursorTop = startingTop;
+        
+        // Write the input, but only as much as fits in available buffer space
+        if (inputLinesCount <= availableLines)
+        {
+            // All input fits, write it normally
+            Console.Write(input);
+        }
+        else
+        {
+            // Input is too tall, write what we can
+            var linesToWrite = inputLines.Take(availableLines - 1).ToArray();
+            string visibleInput = string.Join('\n', linesToWrite);
+            if (availableLines > 1)
+            {
+                visibleInput += "\n[...]"; // Show truncation indicator if we have space
+            }
+            Console.Write(visibleInput);
+        }
+        
+        // Position cursor correctly
+        if (cursorPosition <= input.Length)
+        {
+            // Calculate where cursor should be based on the full input
+            string beforeCursor = input.Substring(0, Math.Min(cursorPosition, input.Length));
+            var cursorLines = beforeCursor.Split('\n');
+            int targetLine = cursorLines.Length - 1;
+            int targetColumn = startingLeft + cursorLines[cursorLines.Length - 1].Length;
+            
+            int newTop = startingTop + targetLine;
+            
+            // Make sure cursor position is within available buffer space
+            if (newTop >= startingTop && newTop < Console.BufferHeight && 
+                targetColumn >= 0 && targetColumn < Console.WindowWidth &&
+                targetLine < availableLines)
+            {
+                Console.CursorTop = newTop;
+                Console.CursorLeft = targetColumn;
+            }
+            else
+            {
+                // Cursor would be outside visible area, put it at end of visible content
+                int lastVisibleLine = Math.Min(linesToDraw - 1, availableLines - 1);
+                Console.CursorTop = startingTop + lastVisibleLine;
+                
+                if (lastVisibleLine < inputLines.Length)
+                {
+                    // Position at end of the last visible line
+                    Console.CursorLeft = startingLeft + inputLines[lastVisibleLine].Length;
+                }
+                else
+                {
+                    Console.CursorLeft = startingLeft;
+                }
+            }
+        }
+    }
+
+    private static void ClearInputLine(int maxNewlines, int startingLeft, int startingTop)
+    {
+        // Bounds checking for starting position
+        if (startingTop < 0 || startingTop >= Console.BufferHeight || startingLeft < 0 || startingLeft >= Console.WindowWidth)
+        {
+            return; // Can't clear if starting position is invalid
+        }
+        
+        // Clear all lines we might have used
+        int totalLines = maxNewlines + 1;
+        int maxClearableLines = Math.Min(totalLines, Console.BufferHeight - startingTop);
+        
+        // Go to starting position
+        Console.CursorLeft = startingLeft;
+        Console.CursorTop = startingTop;
+        
+        // Clear all lines
+        for (int i = 0; i < maxClearableLines; i++)
+        {
+            Console.Write(new string(' ', Math.Min(Console.WindowWidth - 1, Console.WindowWidth - startingLeft)));
+            if (i < maxClearableLines - 1 && Console.CursorTop + 1 < Console.BufferHeight)
+            {
+                Console.WriteLine();
+            }
+        }
+        
+        // Return to starting position
+        if (startingTop < Console.BufferHeight && startingLeft < Console.WindowWidth)
+        {
+            Console.CursorLeft = startingLeft;
+            Console.CursorTop = startingTop;
+        }
+    }
+
+    private static void ReplaceInputField(string newText, ref string input, ref int cursorPosition, ref int maxNewlines, int startingLeft, int startingTop)
+    {
+        ClearInputLine(maxNewlines, startingLeft, startingTop);
 
         // Write new text
         input = newText ?? "";
+        
+        // Update max newlines
+        maxNewlines = Math.Max(maxNewlines, input.Count(c => c == '\n'));
+        
         Console.Write(input);
 
         // Set cursor to end of new input

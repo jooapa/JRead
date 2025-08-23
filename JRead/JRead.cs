@@ -5,6 +5,7 @@ namespace JRead
     public class JReadOptions
     {
         public bool EnableDebug { get; set; } = false;
+        internal CursorPos _cursorPos = new CursorPos();
     }
 
     public class CursorPos
@@ -17,16 +18,22 @@ namespace JRead
     {
         public static string Read(string? prefillText = null, JReadOptions? options = null)
         {
+#pragma warning disable CS8321
+            bool IsCtrlKeyPressed(ConsoleKeyInfo keyInfo) => (keyInfo.Modifiers & ConsoleModifiers.Control) != 0;
+            bool IsShiftKeyPressed(ConsoleKeyInfo keyInfo) => (keyInfo.Modifiers & ConsoleModifiers.Shift) != 0;
+            bool IsAltKeyPressed(ConsoleKeyInfo keyInfo) => (keyInfo.Modifiers & ConsoleModifiers.Alt) != 0;
+#pragma warning restore CS8321
+            
             string input = prefillText ?? "";
             int cursorPosition = input.Length;
-            CursorPos cursorPos = new CursorPos
+            ConsoleKeyInfo key;
+            options ??= new JReadOptions();
+
+            options._cursorPos = new CursorPos
             {
                 Left = Console.CursorLeft,
                 Top = Console.CursorTop
             };            
-            ConsoleKeyInfo key;
-            options ??= new JReadOptions();
-
             // Write initial input
             Console.Write(input);
 
@@ -53,7 +60,7 @@ namespace JRead
                         {
                             input = input.Remove(cursorPosition - 1, 1);
                             cursorPosition--;
-                            RedrawLine(input, cursorPosition, cursorPos);
+                            RedrawLine(input, cursorPosition, options);
                         }
                         break;
                     case ConsoleKey.LeftArrow:
@@ -76,16 +83,17 @@ namespace JRead
                         {
                             input = input.Insert(cursorPosition, key.KeyChar.ToString());
                             cursorPosition++;
-                            RedrawLine(input, cursorPosition, cursorPos);
+                            RedrawLine(input, cursorPosition, options);
                         }
                         break;
                 }
             } while (true);
         }
 
-        private static void RedrawLine(string input, int cursorDelPosition, CursorPos originalPos)
+        private static void RedrawLine(string input, int cursorDelPosition, JReadOptions options)
         {
-            // Go to the original starting position
+            CursorPos originalPos = options._cursorPos;
+
             Console.SetCursorPosition(originalPos.Left, originalPos.Top);
             
             // Calculate available space from original position to end of line
@@ -106,7 +114,7 @@ namespace JRead
                 // Show "..." and the end portion of the input
                 int endLength = availableSpace - 3; // Space for "..." prefix
                 int startIndex = Math.Max(0, input.Length - endLength);
-                displayText = "..." + input.Substring(startIndex);
+                displayText = string.Concat("...", input.AsSpan(startIndex));
                 
                 // Adjust cursor position relative to the displayed text
                 if (cursorDelPosition >= startIndex)

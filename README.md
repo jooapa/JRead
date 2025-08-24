@@ -9,7 +9,7 @@
 - **Line Editing:** Insert, delete, overwrite text anywhere in the input line
 - **Cursor Movement:** Move cursor by character, word, or to start/end of line
 - **Command History:** Navigate, search, and persist command history
-- **Autocompletion:** Tab-complete words, filenames, or custom tokens
+- **Autocompletion:** Tab-complete words, filenames, or custom tokens 
 - **Syntax Highlighting:** Colorize input for commands, expressions, etc.
 - **Multi-line Input:** Edit and submit multi-line text
 - **Clipboard Support:** Cut, copy, and paste (Ctrl+C, Ctrl+V, etc.)

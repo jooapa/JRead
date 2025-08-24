@@ -1,4 +1,5 @@
 ﻿using JRead;
+using System.Reflection;
 
 namespace JRead.Test;
 
@@ -6,13 +7,57 @@ public class Program
 {
     public static void Main(string[] args)
     {
-        var opt = new JReadOptions
+        if (args.Length == 0)
         {
-            EnableDebug = false,
-        };
-        Console.SetCursorPosition(10, Console.GetCursorPosition().Top);
-        string output = JRead.Read("first\nsecond", opt);
+            Console.WriteLine("Available tests:");
+            ListAvailableTests();
+            Console.WriteLine("\nUsage: dotnet run <test_name>");
+            return;
+        }
 
-        Console.WriteLine($"\nOutput: {output}");
+        string testName = args[0];
+        RunTest(testName);
+    }
+
+    private static void RunTest(string testName)
+    {
+        // Get all methods in this class that are public and static
+        var methods = typeof(JReadTests).GetMethods(BindingFlags.Public | BindingFlags.Static)
+            .ToList();
+
+        // Find the test method
+        var testMethod = methods.FirstOrDefault(m =>
+            string.Equals(m.Name, testName, StringComparison.OrdinalIgnoreCase));
+
+        if (testMethod == null)
+        {
+            Console.WriteLine($"Test '{testName}' not found!");
+            Console.WriteLine("\nAvailable tests:");
+            ListAvailableTests();
+            return;
+        }
+
+        Console.WriteLine($"Running test: {testMethod.Name}");
+        Console.WriteLine(new string('=', 50));
+
+        try
+        {
+            testMethod.Invoke(null, null);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Test failed with error: {ex.Message}");
+        }
+    }
+
+    private static void ListAvailableTests()
+    {
+        var methods = typeof(JReadTests).GetMethods(BindingFlags.Public | BindingFlags.Static)
+                                   .ToList();
+
+        foreach (var method in methods)
+        {
+            Console.WriteLine($"  - {method.Name}");
+        }
     }
 }

@@ -21,11 +21,9 @@ public class Program
 
     private static void RunTest(string testName)
     {
-        // Get all methods in this class that are public and static
         var methods = typeof(JReadTests).GetMethods(BindingFlags.Public | BindingFlags.Static)
             .ToList();
 
-        // Find the test method
         var testMethod = methods.FirstOrDefault(m =>
             string.Equals(m.Name, testName, StringComparison.OrdinalIgnoreCase));
 

@@ -13,15 +13,14 @@
 
 ### In Works
 
-- **Command History:** Navigate, search, and persist command history
 - **Autocompletion:** Tab-complete words, filenames, or custom tokens 
+- **Input Validation:** Validate input in real-time or before submission
 - **Syntax Highlighting:** Colorize input for commands, expressions, etc.
 - **Multi-line Input:** Edit and submit multi-line text
 - **Undo/Redo:** Restore previous states
 - **Text Selection:** Keyboard and mouse support for selecting text
 - **Customizable Prompts:** Change prompt text, colors, and styles
 - **Masked Input:** Hide input for passwords or sensitive data
-- **Input Validation:** Validate input in real-time or before submission
 - **ANSI/VT100 Support:** Colors, formatting, and effects
 - **Mouse Support:** Click for cursor movement and selection
 - **Cross-platform:** Works on Windows, Linux, and macOS terminals

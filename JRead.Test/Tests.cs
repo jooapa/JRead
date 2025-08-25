@@ -16,8 +16,9 @@ public class JReadTests
     {
         var opt = new JReadOptions
         {
-            EnableDebug = false,
+            EnableDebug = true,
             AddReturnedValueToHistory = true,
+            EscapingReturnsTheOriginalInput = true,
             CustomHistory = new(
                 [
                     "Custom history item 1",

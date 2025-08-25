@@ -38,14 +38,14 @@ public class Program
         Console.WriteLine($"Running test: {testMethod.Name}");
         Console.WriteLine(new string('=', 50));
 
-        try
+        // try
         {
             testMethod.Invoke(null, null);
         }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Test failed with error: {ex.Message}");
-        }
+        // catch (Exception ex)
+        // {
+        //     Console.WriteLine($"Test failed with error: {ex.Message}");
+        // }
     }
 
     private static void ListAvailableTests()

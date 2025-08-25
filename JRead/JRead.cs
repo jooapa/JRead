@@ -8,17 +8,17 @@ public static class JRead
     // Global history instance for easy access
     public static JReadHistory History { get; } = new();
 
-    public static string Read(string? prefillText = null, string? beginningText = null, JReadOptions? options = null)
+    public static string? Read(string? prefillText = null, string? beginningText = null, JReadOptions? options = null)
     {
         return ReadInternal(prefillText, options);
     }
     
-    public static string Read(string? prefillText, JReadOptions options)
+    public static string? Read(string? prefillText, JReadOptions options)
     {
         return ReadInternal(prefillText, options);
     }
 
-    private static string ReadInternal(string? prefillText, JReadOptions? options = null)
+    private static string? ReadInternal(string? prefillText, JReadOptions? options = null)
     {
 
 #pragma warning disable CS8321
@@ -30,7 +30,7 @@ public static class JRead
         string input = prefillText ?? "";
         int cursorPosition = input.Length;
         int historyIndex = -1; // -1 means current input, 0+ means history item
-        string originalInput = input; // Store original input to restore when going back
+        string originalInput = input;
         ConsoleKeyInfo key;
         options ??= new JReadOptions();
 
@@ -50,16 +50,14 @@ public static class JRead
         {
             key = Console.ReadKey(true);
 
-            if (options.EnableDebug)
-            {
-                Console.WriteLine($"Key pressed: {key.KeyChar}, Key: {key.Key}, Control: {key.Modifiers}, CursorPos: ({Console.CursorLeft}, {Console.CursorTop})");
-            }
-
-
             switch (key.Key)
             {
                 case ConsoleKey.Escape:
-                    return string.Empty;
+                    if (options.EscapingReturnsTheOriginalInput)
+                    {
+                        return originalInput;
+                    }
+                    return null;
 
                 case ConsoleKey.Enter:
                     // Add to history if enabled
@@ -67,7 +65,7 @@ public static class JRead
                     {
                         history.Add(input);
                     }
-                    Console.WriteLine();
+                    // Console.WriteLine();
                     return input;
 
                 case ConsoleKey.Backspace:
@@ -75,7 +73,7 @@ public static class JRead
                     {
                         // Reset history navigation when editing
                         historyIndex = -1;
-                        
+
                         input = input.Remove(cursorPosition - 1, 1);
                         cursorPosition--;
                         DrawLine(input, cursorPosition, options);
@@ -86,7 +84,7 @@ public static class JRead
                     {
                         // Reset history navigation when editing
                         historyIndex = -1;
-                        
+
                         input = input.Remove(cursorPosition, 1);
                         DrawLine(input, cursorPosition, options);
                     }
@@ -104,7 +102,7 @@ public static class JRead
                         {
                             historyIndex--;
                         }
-                        
+
                         var historyItem = history.Get(historyIndex);
                         if (historyItem != null)
                         {
@@ -114,7 +112,7 @@ public static class JRead
                         }
                     }
                     break;
-                    
+
                 case ConsoleKey.DownArrow:
                     if (history.Count > 0 && historyIndex != -1)
                     {
@@ -139,7 +137,7 @@ public static class JRead
                         }
                     }
                     break;
-                    
+
                 case ConsoleKey.LeftArrow:
                     if (cursorPosition > 0)
                     {
@@ -167,19 +165,19 @@ public static class JRead
                     {
                         // Reset history navigation when editing
                         historyIndex = -1;
-                        
+
                         // Delete word to the left
                         // Define word boundary characters
                         char[] wordBoundaries = { ' ', '"', '\'', '/', '(', ')', '[', ']', '{', '}', ',', '.', ';', ':', '!', '?', '@', '#', '$', '%', '^', '&', '*', '+', '=', '|', '\\', '<', '>', '~', '`' };
-                        
+
                         int wordStart = cursorPosition - 1;
-                        
+
                         // Find the start of the current word by looking for word boundary characters
                         while (wordStart >= 0 && Array.IndexOf(wordBoundaries, input[wordStart]) == -1)
                         {
                             wordStart--;
                         }
-                        
+
                         // If we found a boundary character, move one position forward to start deletion after it
                         if (wordStart >= 0 && Array.IndexOf(wordBoundaries, input[wordStart]) != -1)
                         {
@@ -190,7 +188,7 @@ public static class JRead
                             // If no boundary found, start from beginning
                             wordStart = 0;
                         }
-                        
+
                         if (wordStart < cursorPosition)
                         {
                             input = input.Remove(wordStart, cursorPosition - wordStart);
@@ -205,13 +203,16 @@ public static class JRead
                     {
                         // Reset history navigation when typing new characters
                         historyIndex = -1;
-                        
+
                         input = input.Insert(cursorPosition, key.KeyChar.ToString());
                         cursorPosition++;
                         DrawLine(input, cursorPosition, options);
                     }
                     break;
             }
+            if (options.EnableDebug)
+                Console.Write($"Key pressed: {key.KeyChar}, Key: {key.Key}, Control: {key.Modifiers}");
+            
         } while (true);
     }
 
@@ -220,41 +221,41 @@ public static class JRead
         CursorPos originalPos = options._cursorPos;
 
         Console.SetCursorPosition(originalPos.Left, originalPos.Top);
-        
+
         // Calculate available space from original position to end of line
         int availableSpace = Console.WindowWidth - originalPos.Left;
-        
+
         // Clear from original position to end of line
         Console.Write(new string(' ', availableSpace));
-        
+
         // Go back to original position
         Console.SetCursorPosition(originalPos.Left, originalPos.Top);
-        
+
         // Convert newlines to visible characters for display
         string ConvertNewlinesToVisible(string text)
         {
             return text.Replace("\n", "↵").Replace("\r", "");
         }
-        
+
         // If input is too long, show "..." at the start and display the end portion
         string displayText;
         int displayCursorPos;
-        
+
         // Convert input to visible format for display calculations
         string visibleInput = ConvertNewlinesToVisible(input);
-        
+
         if (visibleInput.Length > availableSpace - 3) // Leave space for "..."
         {
             // Show "..." and the end portion of the input
             int endLength = availableSpace - 3; // Space for "..." prefix
             int startIndex = Math.Max(0, visibleInput.Length - endLength);
             displayText = string.Concat("...", visibleInput.AsSpan(startIndex));
-            
+
             // Adjust cursor position relative to the displayed text
             // Need to account for newline conversion when calculating cursor position
             string beforeCursor = input.Substring(0, Math.Min(cursorDelPosition, input.Length));
             string visibleBeforeCursor = ConvertNewlinesToVisible(beforeCursor);
-            
+
             if (visibleBeforeCursor.Length >= startIndex)
             {
                 displayCursorPos = 3 + (visibleBeforeCursor.Length - startIndex); // 3 for "..."
@@ -268,26 +269,27 @@ public static class JRead
         {
             // Input fits, display normally
             displayText = visibleInput;
-            
+
             // Calculate cursor position in visible text
             string beforeCursor = input.Substring(0, Math.Min(cursorDelPosition, input.Length));
             string visibleBeforeCursor = ConvertNewlinesToVisible(beforeCursor);
             displayCursorPos = visibleBeforeCursor.Length;
         }
-        
+
         // Write the display text
         Console.Write(displayText);
-        
-        // Position cursor at the correct location relative to original position
+
         int targetLeft = originalPos.Left + displayCursorPos;
-        if (targetLeft < Console.WindowWidth)
-        {
-            Console.SetCursorPosition(targetLeft, originalPos.Top);
-        }
-        else
-        {
-            // Fallback: put cursor at end of line
-            Console.SetCursorPosition(Console.WindowWidth - 1, originalPos.Top);
-        }
+
+        // Clamp targetLeft to valid range
+        if (targetLeft < 0) targetLeft = 0;
+        if (targetLeft >= Console.WindowWidth) targetLeft = Console.WindowWidth - 1;
+
+        // Clamp originalPos.Top to valid range
+        int targetTop = originalPos.Top;
+        if (targetTop < 0) targetTop = 0;
+        if (targetTop >= Console.BufferHeight) targetTop = Console.BufferHeight - 1;
+
+        Console.SetCursorPosition(targetLeft, targetTop);
     }
 }

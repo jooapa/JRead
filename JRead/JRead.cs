@@ -15,47 +15,47 @@ public static class JRead
     /// <summary>
     /// Reads a line, but will not return null.
     /// </summary>
-    /// <param name="prefillText"></param>
-    /// <param name="beginningText"></param>
+    /// <param name="preText"></param>
+    /// <param name="startText"></param>
     /// <param name="options"></param>
     /// <returns></returns>
-    public static string Read(string? prefillText = null, string beginningText = "", JReadOptions? options = null)
+    public static string Read(string? preText = null, string startText = "", JReadOptions? options = null)
     {
-        return ReadInternal(prefillText, options, beginningText) ?? string.Empty;
+        return ReadInternal(preText, options, startText) ?? string.Empty;
     }
 
     /// <summary>
     /// Reads a line, but will not return null.
     /// </summary>
-    /// <param name="prefillText"></param>
+    /// <param name="preText"></param>
     /// <param name="options"></param>
     /// <returns></returns>
-    public static string Read(string? prefillText, JReadOptions options)
+    public static string Read(string? preText, JReadOptions options)
     {
-        return ReadInternal(prefillText, options, "") ?? string.Empty;
+        return ReadInternal(preText, options, "") ?? string.Empty;
     }
 
     /// <summary>
     /// Reads a line, but if EscapingReturnsTheOriginalInput is false, and escaping. will function return null. 
     /// </summary>
-    /// <param name="prefillText"></param>
-    /// <param name="beginningText"></param>
+    /// <param name="preText"></param>
+    /// <param name="startText"></param>
     /// <param name="options"></param>
     /// <returns></returns>
-    public static string? ReadNull(string? prefillText = null, string beginningText = "", JReadOptions? options = null)
+    public static string? ReadNull(string? preText = null, string startText = "", JReadOptions? options = null)
     {
-        return ReadInternal(prefillText, options, beginningText);
+        return ReadInternal(preText, options, startText);
     }
 
     /// <summary>
     /// Reads a line, but if EscapingReturnsTheOriginalInput is false, and escaping. Function will return null. 
     /// </summary>
-    /// <param name="prefillText"></param>
+    /// <param name="preText"></param>
     /// <param name="options"></param>
     /// <returns></returns>
-    public static string? ReadNull(string? prefillText, JReadOptions options)
+    public static string? ReadNull(string? preText, JReadOptions options)
     {
-        return ReadInternal(prefillText, options, "");
+        return ReadInternal(preText, options, "");
     }
 
     private static string? ReadInternal(string? prefillText, JReadOptions? options = null, string beginningText = "")

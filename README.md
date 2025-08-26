@@ -22,7 +22,7 @@ string name = JRead.Read();
 Console.WriteLine($"Hello, {name}!");
 
 // Input with prompt
-string input = JRead.Read(beginningText: "Enter your name: ");
+string input = JRead.Read(startText: "Enter your name: ");
 Console.WriteLine($"You entered: {input}");
 
 // Input with prefilled text
@@ -46,7 +46,7 @@ var options = new JReadOptions
     AddReturnedValueToHistory = false // Don't save passwords to history
 };
 
-string password = JRead.Read(beginningText: "Password: ", options: options);
+string password = JRead.Read(startText: "Password: ", options: options);
 ```
 
 #### Autocomplete
@@ -65,7 +65,7 @@ var options = new JReadOptions
     AutoCompleteCaseSensitive = false
 };
 
-string fruit = JRead.Read(beginningText: "Choose a fruit: ", options: options);
+string fruit = JRead.Read(startText: "Choose a fruit: ", options: options);
 // Type "ap" and press Tab to complete to "apple"
 ```
 
@@ -85,7 +85,7 @@ var options = new JReadOptions
     AddReturnedValueToHistory = true
 };
 
-string command = JRead.Read(beginningText: "Command: ", options: options);
+string command = JRead.Read(startText: "Command: ", options: options);
 // Use Up/Down arrows to navigate through history
 ```
 
@@ -99,7 +99,7 @@ var options = new JReadOptions
     EscapingReturnsTheOriginalInput = false // Escape returns null instead of original
 };
 
-string? input = JRead.ReadNull(beginningText: "Optional input (ESC to cancel): ", options: options);
+string? input = JRead.ReadNull(startText: "Optional input (ESC to cancel): ", options: options);
 if (input == null)
 {
     Console.WriteLine("Input cancelled!");
@@ -116,7 +116,7 @@ var options = new JReadOptions
     EnableDebug = true // Shows key press information
 };
 
-string input = JRead.Read(beginningText: "Debug mode: ", options: options);
+string input = JRead.Read(startText: "Debug mode: ", options: options);
 ```
 
 ### Keyboard Shortcuts

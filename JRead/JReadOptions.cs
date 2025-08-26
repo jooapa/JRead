@@ -32,6 +32,10 @@ public class JReadOptions
     /// If true, autocomplete matching is case sensitive
     /// </summary>
     public bool AutoCompleteCaseSensitive { get; set; } = false;
+    /// <summary>
+    /// If true, masks input characters (e.g. for passwords)
+    /// </summary>
+    public bool EnableMaskedInput { get; set; } = false;
 
     internal CursorPos _cursorPos = new();
 }

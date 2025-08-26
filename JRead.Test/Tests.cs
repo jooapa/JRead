@@ -25,10 +25,12 @@ public class JReadTests
                     "Custom history item 2"
                 ]
             ),
+            AutoCompleteItems = ["cat", "clear", "copy", "create", "check", "Cat", "Clear", "help", "history", "list", "move", "remove"],
+            EnableMaskedInput = true
         };
 
         Console.SetCursorPosition(10, Console.GetCursorPosition().Top);
-        string? output = JRead.Read("kakka ", "", opt);
+        string? output = JRead.Read("kakka ", "> ", opt);
         Console.WriteLine($"\nOutput: {output}");
         Console.WriteLine($"Global History: [{string.Join(", ", JRead.History.GetAll())}]");
         Console.WriteLine($"Custom History: [{string.Join(", ", opt.CustomHistory.GetAll())}]");

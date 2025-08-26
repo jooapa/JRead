@@ -12,6 +12,9 @@ public static class JRead
     // Word boundary characters used throughout the application
     private static readonly char[] WordBoundaries = { ' ', '"', '\'', '/', '(', ')', '[', ']', '{', '}', ',', '.', ';', ':', '!', '?', '@', '#', '$', '%', '^', '&', '*', '+', '=', '|', '\\', '<', '>', '~', '`' };
 
+    // maybe i should not change options globally with changes
+    private static bool _enableAutoComplete = false;
+
     /// <summary>
     /// Reads a line, but if EscapingReturnsTheOriginalInput is false, and escaping. will function return null. 
     /// </summary>
@@ -75,6 +78,17 @@ public static class JRead
         string originalInput = input;
         ConsoleKeyInfo key;
         options ??= new JReadOptions();
+
+        {
+            // Set _enableAutoComplete to options value at first run
+            _enableAutoComplete = options.EnableAutoComplete;
+
+            // dont show autocomplete suggestions if masked input is enabled
+            if (options.EnableMaskedInput)
+            {
+                _enableAutoComplete = false;
+            }
+        }
 
         // Undo/Redo functionality
         var undoStack = new Stack<InputState>();
@@ -339,7 +353,7 @@ public static class JRead
                     }
                     break;
                 case ConsoleKey.Tab:
-                    if (options.EnableAutoComplete && options.AutoCompleteItems.Count > 0)
+                    if (_enableAutoComplete && options.AutoCompleteItems.Count > 0)
                     {
                         // Save state for undo before modification
                         SaveStateForUndo();
@@ -435,7 +449,7 @@ public static class JRead
 
         // Get autocomplete suggestion if enabled
         string autoCompleteSuggestion = "";
-        if (options.EnableAutoComplete && options.AutoCompleteItems.Count > 0)
+        if (_enableAutoComplete && options.AutoCompleteItems.Count > 0)
         {
             string currentWord = GetCurrentWord(input, cursorDelPosition);
             if (currentWord.Length >= options.AutoCompleteMinLength)
@@ -480,10 +494,13 @@ public static class JRead
             // Split input at cursor position for proper cursor placement
             string beforeCursor = ConvertNewlinesToVisible(input.Substring(0, cursorDelPosition));
             string afterCursor = ConvertNewlinesToVisible(input.Substring(cursorDelPosition));
-            
+
             // Write text before cursor
-            Console.Write(beforeCursor);
-            
+            if (options.EnableMaskedInput)
+                Console.Write(new string('*', beforeCursor.Length));
+            else
+                Console.Write(beforeCursor);
+
             // Save cursor position
             int cursorLeft = Console.CursorLeft;
             int cursorTop = Console.CursorTop;
@@ -498,8 +515,11 @@ public static class JRead
             }
             
             // Write text after cursor
-            Console.Write(afterCursor);
-            
+            if (options.EnableMaskedInput)
+                Console.Write(new string('*', afterCursor.Length));
+            else
+                Console.Write(afterCursor);
+
             // Position cursor at the right place with bounds checking
             SafeSetCursorPosition(cursorLeft, cursorTop);
         }
@@ -565,9 +585,12 @@ public static class JRead
             {
                 displayText += "...";
             }
-            
+
             // Write the truncated text
-            Console.Write(displayText.Substring(0, Math.Min(displayText.Length, availableWidth)));
+            if (options.EnableMaskedInput)
+                Console.Write(new string('*', Math.Min(displayText.Length, availableWidth)));
+            else
+                Console.Write(displayText.Substring(0, Math.Min(displayText.Length, availableWidth)));
             
             // Position cursor correctly with bounds checking
             SafeSetCursorPosition(originalPos.Left + displayCursorPos, originalPos.Top);

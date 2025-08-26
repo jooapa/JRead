@@ -12,6 +12,7 @@
 - **Cursor Movement:** Move cursor by character, word, or to start/end of line
 - **Autocompletion:** Tab-complete words
 - **Undo/Redo:** Restore previous states
+- **Masked Input:** Hide input for passwords or sensitive data
 
 ### In Works
 
@@ -20,7 +21,6 @@
 - **Multi-line Input:** Edit and submit multi-line text
 - **Text Selection:** Keyboard and mouse support for selecting text
 - **Customizable Prompts:** Change prompt text, colors, and styles
-- **Masked Input:** Hide input for passwords or sensitive data
 - **ANSI/VT100 Support:** Colors, formatting, and effects
 - **Mouse Support:** Click for cursor movement and selection
 - **Async/Task Support:** Non-blocking input for async applications

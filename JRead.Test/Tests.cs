@@ -48,7 +48,7 @@ public class JReadTests
         
         while (true)
         {
-            string result = JRead.ReadNoNull("","Auto Complete> ", options);
+            string result = JRead.Read("","Auto Complete> ", options);
             Console.WriteLine($"You entered: {result}");
         }
     }
@@ -65,7 +65,7 @@ public class JReadTests
         
         while (true)
         {
-            string result = JRead.ReadNoNull("","CaseSensitive> ", options);
+            string result = JRead.Read("","CaseSensitive> ", options);
             Console.WriteLine($"You entered: {result}");
         }
     }

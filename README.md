@@ -14,10 +14,10 @@
 
 ### In Works
 
+- **Undo/Redo:** Restore previous states
 - **Input Validation:** Validate input in real-time or before submission
 - **Syntax Highlighting:** Colorize input for commands, expressions, etc.
 - **Multi-line Input:** Edit and submit multi-line text
-- **Undo/Redo:** Restore previous states
 - **Text Selection:** Keyboard and mouse support for selecting text
 - **Customizable Prompts:** Change prompt text, colors, and styles
 - **Masked Input:** Hide input for passwords or sensitive data
@@ -28,3 +28,7 @@
 - **Extensible:** Plugins for completion, highlighting, and more
 
 ---
+
+## Quirks
+
+- JRead does not handle terminal resizing well

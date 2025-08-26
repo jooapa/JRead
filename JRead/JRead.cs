@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace JRead;
 
@@ -75,6 +76,36 @@ public static class JRead
         ConsoleKeyInfo key;
         options ??= new JReadOptions();
 
+        // Undo/Redo functionality
+        var undoStack = new Stack<InputState>();
+        var redoStack = new Stack<InputState>();
+        
+        // Helper method to save current state for undo
+        void SaveStateForUndo()
+        {
+            undoStack.Push(new InputState(input, cursorPosition));
+            redoStack.Clear(); // Clear redo stack when new action is performed
+            
+            // Limit undo stack size to prevent memory issues
+            if (undoStack.Count > 100)
+            {
+                var tempStack = new Stack<InputState>();
+                for (int i = 0; i < 50; i++)
+                {
+                    if (undoStack.Count > 0)
+                        tempStack.Push(undoStack.Pop());
+                }
+                undoStack.Clear();
+                while (tempStack.Count > 0)
+                {
+                    undoStack.Push(tempStack.Pop());
+                }
+            }
+        }
+        
+        // Save initial state
+        SaveStateForUndo();
+
         options._cursorPos = new CursorPos
         {
             Left = Console.CursorLeft,
@@ -98,7 +129,7 @@ public static class JRead
             {
                 lastWindowWidth = Console.WindowWidth;
                 lastWindowHeight = Console.WindowHeight;
-                Console.WriteLine("asdasdads");
+                
                 // Redraw the line after resize
                 DrawLine(input, cursorPosition, options);
             }
@@ -126,6 +157,9 @@ public static class JRead
                 case ConsoleKey.Backspace:
                     if (input.Length > 0 && cursorPosition > 0)
                     {
+                        // Save state for undo before modification
+                        SaveStateForUndo();
+                        
                         // Reset history navigation when editing
                         historyIndex = -1;
 
@@ -137,6 +171,9 @@ public static class JRead
                 case ConsoleKey.Delete:
                     if (input.Length > 0 && cursorPosition < input.Length)
                     {
+                        // Save state for undo before modification
+                        SaveStateForUndo();
+                        
                         // Reset history navigation when editing
                         historyIndex = -1;
 
@@ -149,12 +186,15 @@ public static class JRead
                     {
                         if (historyIndex == -1)
                         {
-                            // First time going into history, save current input
+                            // First time going into history, save current input and state for undo
+                            SaveStateForUndo();
                             originalInput = input;
                             historyIndex = history.Count - 1;
                         }
                         else if (historyIndex > 0)
                         {
+                            // Save current state before changing to different history item
+                            SaveStateForUndo();
                             historyIndex--;
                         }
 
@@ -171,6 +211,9 @@ public static class JRead
                 case ConsoleKey.DownArrow:
                     if (history.Count > 0 && historyIndex != -1)
                     {
+                        // Save current state before changing
+                        SaveStateForUndo();
+                        
                         if (historyIndex < history.Count - 1)
                         {
                             historyIndex++;
@@ -227,9 +270,60 @@ public static class JRead
                     cursorPosition = input.Length;
                     DrawLine(input, cursorPosition, options);
                     break;
+                case ConsoleKey.U:
+                case ConsoleKey.Z:
+                    if (IsCtrlKeyPressed(key))
+                    {
+                        // Undo (Ctrl+U is safer than Ctrl+Z on Unix systems)
+                        if (undoStack.Count > 0)
+                        {
+                            // Save current state to redo stack
+                            redoStack.Push(new InputState(input, cursorPosition));
+                            
+                            // Restore previous state
+                            var previousState = undoStack.Pop();
+                            input = previousState.Input;
+                            cursorPosition = Math.Min(previousState.CursorPosition, input.Length);
+                            
+                            // Update originalInput if we're not in history navigation mode
+                            if (historyIndex == -1)
+                            {
+                                originalInput = input;
+                            }
+                            
+                            DrawLine(input, cursorPosition, options);
+                        }
+                    }
+                    break;
+                case ConsoleKey.Y:
+                    if (IsCtrlKeyPressed(key))
+                    {
+                        if (redoStack.Count > 0)
+                        {
+                            // Save current state to undo stack
+                            undoStack.Push(new InputState(input, cursorPosition));
+                            
+                            // Restore next state
+                            var nextState = redoStack.Pop();
+                            input = nextState.Input;
+                            cursorPosition = Math.Min(nextState.CursorPosition, input.Length);
+                            
+                            // Update originalInput if we're not in history navigation mode
+                            if (historyIndex == -1)
+                            {
+                                originalInput = input;
+                            }
+                            
+                            DrawLine(input, cursorPosition, options);
+                        }
+                    }
+                    break;
                 case ConsoleKey.W:
                     if (IsCtrlKeyPressed(key))
                     {
+                        // Save state for undo before modification
+                        SaveStateForUndo();
+                        
                         // Reset history navigation when editing
                         historyIndex = -1;
 
@@ -247,6 +341,9 @@ public static class JRead
                 case ConsoleKey.Tab:
                     if (options.EnableAutoComplete && options.AutoCompleteItems.Count > 0)
                     {
+                        // Save state for undo before modification
+                        SaveStateForUndo();
+                        
                         // Reset history navigation when using autocomplete
                         historyIndex = -1;
 
@@ -284,6 +381,9 @@ public static class JRead
                 default:
                     if (!char.IsControl(key.KeyChar))
                     {
+                        // Save state for undo before modification
+                        SaveStateForUndo();
+                        
                         // Reset history navigation when typing new characters
                         historyIndex = -1;
 

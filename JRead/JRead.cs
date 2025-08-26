@@ -8,17 +8,90 @@ public static class JRead
     // Global history instance for easy access
     public static JReadHistory History { get; } = new();
 
-    public static string? Read(string? prefillText = null, string? beginningText = null, JReadOptions? options = null)
+    // Word boundary characters used throughout the application
+    private static readonly char[] WordBoundaries = { ' ', '"', '\'', '/', '(', ')', '[', ']', '{', '}', ',', '.', ';', ':', '!', '?', '@', '#', '$', '%', '^', '&', '*', '+', '=', '|', '\\', '<', '>', '~', '`' };
+
+    /// <summary>
+    /// Finds the start of a word by looking backwards from the given position
+    /// </summary>
+    private static int FindWordStart(string input, int position)
     {
-        return ReadInternal(prefillText, options);
-    }
-    
-    public static string? Read(string? prefillText, JReadOptions options)
-    {
-        return ReadInternal(prefillText, options);
+        int wordStart = position - 1;
+        while (wordStart >= 0 && Array.IndexOf(WordBoundaries, input[wordStart]) == -1)
+        {
+            wordStart--;
+        }
+        return wordStart + 1; // Move to the first character of the word
     }
 
-    private static string? ReadInternal(string? prefillText, JReadOptions? options = null)
+    /// <summary>
+    /// Finds the end of a word by looking forwards from the given position
+    /// </summary>
+    private static int FindWordEnd(string input, int position)
+    {
+        int wordEnd = position;
+        while (wordEnd < input.Length && Array.IndexOf(WordBoundaries, input[wordEnd]) == -1)
+        {
+            wordEnd++;
+        }
+        return wordEnd;
+    }
+
+    /// <summary>
+    /// Checks if the cursor is at the end of a word or at a word boundary
+    /// </summary>
+    private static bool IsAtEndOfWord(string input, int position)
+    {
+        return position >= input.Length || Array.IndexOf(WordBoundaries, input[position]) != -1;
+    }
+
+    /// <summary>
+    /// Reads a line, but if EscapingReturnsTheOriginalInput is false, and escaping. will function return null. 
+    /// </summary>
+    /// <param name="prefillText"></param>
+    /// <param name="beginningText"></param>
+    /// <param name="options"></param>
+    /// <returns></returns>
+    public static string? Read(string? prefillText = null, string beginningText = "", JReadOptions? options = null)
+    {
+        return ReadInternal(prefillText, options, beginningText);
+    }
+
+    /// <summary>
+    /// Reads a line, but if EscapingReturnsTheOriginalInput is false, and escaping. will function return null. 
+    /// </summary>
+    /// <param name="prefillText"></param>
+    /// <param name="options"></param>
+    /// <returns></returns>
+    public static string? Read(string? prefillText, JReadOptions options)
+    {
+        return ReadInternal(prefillText, options, "");
+    }
+    
+    /// <summary>
+    /// Reads a line, but will not return null.
+    /// </summary>
+    /// <param name="prefillText"></param>
+    /// <param name="beginningText"></param>
+    /// <param name="options"></param>
+    /// <returns></returns>
+    public static string ReadNoNull(string? prefillText = null, string beginningText = "", JReadOptions? options = null)
+    {
+        return ReadInternal(prefillText, options, beginningText) ?? string.Empty;
+    }
+    
+    /// <summary>
+    /// Reads a line, but will not return null.
+    /// </summary>
+    /// <param name="prefillText"></param>
+    /// <param name="options"></param>
+    /// <returns></returns>
+    public static string ReadNoNull(string? prefillText, JReadOptions options)
+    {
+        return ReadInternal(prefillText, options, "") ?? string.Empty;
+    }
+
+    private static string? ReadInternal(string? prefillText, JReadOptions? options = null, string beginningText = "")
     {
 
 #pragma warning disable CS8321
@@ -26,7 +99,9 @@ public static class JRead
         bool IsShiftKeyPressed(ConsoleKeyInfo keyInfo) => (keyInfo.Modifiers & ConsoleModifiers.Shift) != 0;
         bool IsAltKeyPressed(ConsoleKeyInfo keyInfo) => (keyInfo.Modifiers & ConsoleModifiers.Alt) != 0;
 #pragma warning restore CS8321
-        
+        if (!string.IsNullOrEmpty(beginningText))
+            Console.Write(beginningText);
+
         string input = prefillText ?? "";
         int cursorPosition = input.Length;
         int historyIndex = -1; // -1 means current input, 0+ means history item
@@ -167,33 +242,49 @@ public static class JRead
                         historyIndex = -1;
 
                         // Delete word to the left
-                        // Define word boundary characters
-                        char[] wordBoundaries = { ' ', '"', '\'', '/', '(', ')', '[', ']', '{', '}', ',', '.', ';', ':', '!', '?', '@', '#', '$', '%', '^', '&', '*', '+', '=', '|', '\\', '<', '>', '~', '`' };
-
-                        int wordStart = cursorPosition - 1;
-
-                        // Find the start of the current word by looking for word boundary characters
-                        while (wordStart >= 0 && Array.IndexOf(wordBoundaries, input[wordStart]) == -1)
-                        {
-                            wordStart--;
-                        }
-
-                        // If we found a boundary character, move one position forward to start deletion after it
-                        if (wordStart >= 0 && Array.IndexOf(wordBoundaries, input[wordStart]) != -1)
-                        {
-                            wordStart++;
-                        }
-                        else
-                        {
-                            // If no boundary found, start from beginning
-                            wordStart = 0;
-                        }
+                        int wordStart = FindWordStart(input, cursorPosition);
 
                         if (wordStart < cursorPosition)
                         {
                             input = input.Remove(wordStart, cursorPosition - wordStart);
                             cursorPosition = wordStart;
                             DrawLine(input, cursorPosition, options);
+                        }
+                    }
+                    break;
+                case ConsoleKey.Tab:
+                    if (options.EnableAutoComplete && options.AutoCompleteItems.Count > 0)
+                    {
+                        // Reset history navigation when using autocomplete
+                        historyIndex = -1;
+
+                        // Get current word to autocomplete
+                        string currentWord = GetCurrentWord(input, cursorPosition);
+
+                        if (currentWord.Length >= options.AutoCompleteMinLength)
+                        {
+                            var comparison = options.AutoCompleteCaseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+                            var matches = options.AutoCompleteItems
+                                .Where(item => item.StartsWith(currentWord, comparison))
+                                .ToList();
+
+                            if (matches.Count > 0)
+                            {
+                                // Use the first match for autocomplete
+                                string completion = matches[0];
+
+                                // Find the bounds of the entire word we're in
+                                int wordStart = cursorPosition - currentWord.Length;
+                                int wordEnd = FindWordEnd(input, cursorPosition);
+
+                                // Replace the entire word (both the typed part and any remaining characters)
+                                int entireWordLength = wordEnd - wordStart;
+                                input = input.Remove(wordStart, entireWordLength);
+                                input = input.Insert(wordStart, completion);
+                                cursorPosition = wordStart + completion.Length;
+
+                                DrawLine(input, cursorPosition, options);
+                            }
                         }
                     }
                     break;
@@ -212,7 +303,7 @@ public static class JRead
             }
             if (options.EnableDebug)
                 Console.Write($"Key pressed: {key.KeyChar}, Key: {key.Key}, Control: {key.Modifiers}");
-            
+
         } while (true);
     }
 
@@ -237,48 +328,114 @@ public static class JRead
             return text.Replace("\n", "↵").Replace("\r", "");
         }
 
-        // If input is too long, show "..." at the start and display the end portion
+        // Get autocomplete suggestion if enabled
+        string autoCompleteSuggestion = "";
+        if (options.EnableAutoComplete && options.AutoCompleteItems.Count > 0)
+        {
+            string currentWord = GetCurrentWord(input, cursorDelPosition);
+            if (currentWord.Length >= options.AutoCompleteMinLength)
+            {
+                // Only show suggestions if we're at the end of the current word
+                bool atEndOfWord = IsAtEndOfWord(input, cursorDelPosition);
+
+                if (atEndOfWord)
+                {
+                    var comparison = options.AutoCompleteCaseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+                    var match = options.AutoCompleteItems
+                        .FirstOrDefault(item => item.StartsWith(currentWord, comparison));
+                    
+                    if (match != null && match.Length > currentWord.Length)
+                    {
+                        autoCompleteSuggestion = match.Substring(currentWord.Length);
+                    }
+                }
+            }
+        }
+
+        // Split input into parts: before cursor, and after cursor
+        string beforeCursor = input.Substring(0, cursorDelPosition);
+        string afterCursor = input.Substring(cursorDelPosition);
+
+        // Convert to visible format
+        string visibleBeforeCursor = ConvertNewlinesToVisible(beforeCursor);
+        string visibleAfterCursor = ConvertNewlinesToVisible(afterCursor);
+
+        // Calculate total length with suggestion
+        int totalLength = visibleBeforeCursor.Length + autoCompleteSuggestion.Length + visibleAfterCursor.Length;
+
         string displayText;
         int displayCursorPos;
 
-        // Convert input to visible format for display calculations
-        string visibleInput = ConvertNewlinesToVisible(input);
-
-        if (visibleInput.Length > availableSpace - 3) // Leave space for "..."
+        if (totalLength > availableSpace - 3) // Need to truncate
         {
-            // Show "..." and the end portion of the input
-            int endLength = availableSpace - 3; // Space for "..." prefix
-            int startIndex = Math.Max(0, visibleInput.Length - endLength);
-            displayText = string.Concat("...", visibleInput.AsSpan(startIndex));
-
-            // Adjust cursor position relative to the displayed text
-            // Need to account for newline conversion when calculating cursor position
-            string beforeCursor = input.Substring(0, Math.Min(cursorDelPosition, input.Length));
-            string visibleBeforeCursor = ConvertNewlinesToVisible(beforeCursor);
-
-            if (visibleBeforeCursor.Length >= startIndex)
+            // Show "..." and try to keep cursor area visible
+            if (visibleBeforeCursor.Length > availableSpace / 2)
             {
-                displayCursorPos = 3 + (visibleBeforeCursor.Length - startIndex); // 3 for "..."
+                // Truncate from the beginning
+                int keepLength = availableSpace - 3 - autoCompleteSuggestion.Length - Math.Min(visibleAfterCursor.Length, availableSpace / 4);
+                if (keepLength > 0)
+                {
+                    int startIndex = visibleBeforeCursor.Length - keepLength;
+                    string truncatedBefore = "..." + visibleBeforeCursor.Substring(startIndex);
+                    displayText = truncatedBefore;
+                    displayCursorPos = truncatedBefore.Length;
+                }
+                else
+                {
+                    displayText = "...";
+                    displayCursorPos = 3;
+                }
             }
             else
             {
-                displayCursorPos = 0; // Cursor is before visible area
+                displayText = visibleBeforeCursor;
+                displayCursorPos = visibleBeforeCursor.Length;
             }
         }
         else
         {
-            // Input fits, display normally
-            displayText = visibleInput;
-
-            // Calculate cursor position in visible text
-            string beforeCursor = input.Substring(0, Math.Min(cursorDelPosition, input.Length));
-            string visibleBeforeCursor = ConvertNewlinesToVisible(beforeCursor);
+            // Everything fits
+            displayText = visibleBeforeCursor;
             displayCursorPos = visibleBeforeCursor.Length;
         }
 
-        // Write the display text
+        // Write the text before cursor
         Console.Write(displayText);
 
+        // Write autocomplete suggestion in grey right at cursor position
+        if (!string.IsNullOrEmpty(autoCompleteSuggestion))
+        {
+            int remainingSpace = availableSpace - Console.CursorLeft + originalPos.Left;
+            if (remainingSpace > 0)
+            {
+                string suggestionToShow = autoCompleteSuggestion.Length > remainingSpace 
+                    ? autoCompleteSuggestion.Substring(0, remainingSpace)
+                    : autoCompleteSuggestion;
+
+                // Store original colors
+                ConsoleColor originalFg = Console.ForegroundColor;
+                
+                // Set grey color for suggestion
+                Console.ForegroundColor = ConsoleColor.DarkGray;
+                Console.Write(suggestionToShow);
+                
+                // Restore original color
+                Console.ForegroundColor = originalFg;
+            }
+        }
+
+        // Write the text after cursor (if there's space)
+        int currentPos = Console.CursorLeft;
+        int spaceForAfter = availableSpace - (currentPos - originalPos.Left);
+        if (spaceForAfter > 0 && !string.IsNullOrEmpty(visibleAfterCursor))
+        {
+            string afterToShow = visibleAfterCursor.Length > spaceForAfter 
+                ? visibleAfterCursor.Substring(0, spaceForAfter)
+                : visibleAfterCursor;
+            Console.Write(afterToShow);
+        }
+
+        // Position cursor correctly
         int targetLeft = originalPos.Left + displayCursorPos;
 
         // Clamp targetLeft to valid range
@@ -291,5 +448,21 @@ public static class JRead
         if (targetTop >= Console.BufferHeight) targetTop = Console.BufferHeight - 1;
 
         Console.SetCursorPosition(targetLeft, targetTop);
+    }
+
+    private static string GetCurrentWord(string input, int cursorPosition)
+    {
+        if (string.IsNullOrEmpty(input) || cursorPosition <= 0)
+            return string.Empty;
+
+        // Find the start of the current word
+        int wordStart = FindWordStart(input, cursorPosition);
+
+        // Get only the part of the word that's before the cursor (what we've typed so far)
+        int length = cursorPosition - wordStart;
+        if (length <= 0)
+            return string.Empty;
+
+        return input.Substring(wordStart, length);
     }
 }

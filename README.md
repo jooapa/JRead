@@ -10,10 +10,10 @@
 
 - **Line Editing:** Insert, delete, overwrite text anywhere in the input line
 - **Cursor Movement:** Move cursor by character, word, or to start/end of line
+- **Autocompletion:** Tab-complete words
 
 ### In Works
 
-- **Autocompletion:** Tab-complete words, filenames, or custom tokens 
 - **Input Validation:** Validate input in real-time or before submission
 - **Syntax Highlighting:** Colorize input for commands, expressions, etc.
 - **Multi-line Input:** Edit and submit multi-line text

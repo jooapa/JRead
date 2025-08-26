@@ -1,6 +1,6 @@
 # JRead
 
-**JRead** is the ultimate C# console input library, offering advanced line editing, rich prompts, history, autocompletion, syntax highlighting, and much more. Designed for developers who need robust, user-friendly console input with all the modern features you'd expect from a world-class readline library.
+**JRead** is the ultimate cross-platform C# console input library
 
 ---
 
@@ -23,7 +23,6 @@
 - **Masked Input:** Hide input for passwords or sensitive data
 - **ANSI/VT100 Support:** Colors, formatting, and effects
 - **Mouse Support:** Click for cursor movement and selection
-- **Cross-platform:** Works on Windows, Linux, and macOS terminals
 - **Async/Task Support:** Non-blocking input for async applications
 - **Custom Key Bindings:** Remap shortcuts for your workflow
 - **Extensible:** Plugins for completion, highlighting, and more

@@ -9,8 +9,8 @@
 ### Basic Usage
 
 ```csharp
-string Read(string? preText, string startText, JReadOptions? options)
-string? ReadNull(string? preText, string startText, JReadOptions? options )
+string Read(string? preText, string startText, JReadOptions? options);
+string? ReadNull(string? preText, string startText, JReadOptions? options);
 ```
 
 #### Simple Input

@@ -6,11 +6,8 @@ namespace JRead;
 
 public static class JRead
 {
-    // Global history instance for easy access
     public static JReadHistory History { get; } = new();
-
-    // Word boundary characters used throughout the application
-    private static readonly char[] WordBoundaries = { ' ', '"', '\'', '/', '(', ')', '[', ']', '{', '}', ',', '.', ';', ':', '!', '?', '@', '#', '$', '%', '^', '&', '*', '+', '=', '|', '\\', '<', '>', '~', '`' };
+    private static readonly char[] AutocompleteWordBoundaries = { ' ', '"', '\'', '/', '(', ')', '[', ']', '{', '}', ',', '.', ';', ':', '!', '?', '@', '#', '$', '%', '^', '&', '*', '+', '=', '|', '\\', '<', '>', '~', '`' };
 
     // maybe i should not change options globally with changes
     private static bool _enableAutoComplete = false;
@@ -407,6 +404,7 @@ public static class JRead
                     }
                     break;
             }
+
             if (options.EnableDebug)
                 Console.Write($"Key pressed: {key.KeyChar}, Key: {key.Key}, Control: {key.Modifiers}");
 
@@ -497,7 +495,7 @@ public static class JRead
 
             // Write text before cursor
             if (options.EnableMaskedInput)
-                Console.Write(new string('*', beforeCursor.Length));
+                Console.Write(new string(options.MaskedInputChar, beforeCursor.Length));
             else
                 Console.Write(beforeCursor);
 
@@ -516,7 +514,7 @@ public static class JRead
             
             // Write text after cursor
             if (options.EnableMaskedInput)
-                Console.Write(new string('*', afterCursor.Length));
+                Console.Write(new string(options.MaskedInputChar, afterCursor.Length));
             else
                 Console.Write(afterCursor);
 
@@ -588,7 +586,7 @@ public static class JRead
 
             // Write the truncated text
             if (options.EnableMaskedInput)
-                Console.Write(new string('*', Math.Min(displayText.Length, availableWidth)));
+                Console.Write(new string(options.MaskedInputChar, Math.Min(displayText.Length, availableWidth)));
             else
                 Console.Write(displayText.Substring(0, Math.Min(displayText.Length, availableWidth)));
             
@@ -635,17 +633,17 @@ public static class JRead
         int current = position - 1;
         
         // If we're starting on a word boundary (like space), skip backwards through word boundaries
-        if (current >= 0 && Array.IndexOf(WordBoundaries, input[current]) != -1)
+        if (current >= 0 && Array.IndexOf(AutocompleteWordBoundaries, input[current]) != -1)
         {
             // Skip backwards through word boundaries (spaces, punctuation, etc.)
-            while (current >= 0 && Array.IndexOf(WordBoundaries, input[current]) != -1)
+            while (current >= 0 && Array.IndexOf(AutocompleteWordBoundaries, input[current]) != -1)
             {
                 current--;
             }
         }
         
         // Now skip backwards through the word characters to find the start
-        while (current >= 0 && Array.IndexOf(WordBoundaries, input[current]) == -1)
+        while (current >= 0 && Array.IndexOf(AutocompleteWordBoundaries, input[current]) == -1)
         {
             current--;
         }
@@ -664,17 +662,17 @@ public static class JRead
         int current = position;
         
         // If we're starting on a word boundary (like space), skip forward through word boundaries
-        if (current < input.Length && Array.IndexOf(WordBoundaries, input[current]) != -1)
+        if (current < input.Length && Array.IndexOf(AutocompleteWordBoundaries, input[current]) != -1)
         {
             // Skip forward through word boundaries (spaces, punctuation, etc.)
-            while (current < input.Length && Array.IndexOf(WordBoundaries, input[current]) != -1)
+            while (current < input.Length && Array.IndexOf(AutocompleteWordBoundaries, input[current]) != -1)
             {
                 current++;
             }
         }
         
         // Now skip forward through the word characters to find the end
-        while (current < input.Length && Array.IndexOf(WordBoundaries, input[current]) == -1)
+        while (current < input.Length && Array.IndexOf(AutocompleteWordBoundaries, input[current]) == -1)
         {
             current++;
         }
@@ -687,6 +685,6 @@ public static class JRead
     /// </summary>
     private static bool IsAtEndOfWord(string input, int position)
     {
-        return position >= input.Length || Array.IndexOf(WordBoundaries, input[position]) != -1;
+        return position >= input.Length || Array.IndexOf(AutocompleteWordBoundaries, input[position]) != -1;
     }
 }

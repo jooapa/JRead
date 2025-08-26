@@ -12,40 +12,6 @@ public static class JRead
     private static readonly char[] WordBoundaries = { ' ', '"', '\'', '/', '(', ')', '[', ']', '{', '}', ',', '.', ';', ':', '!', '?', '@', '#', '$', '%', '^', '&', '*', '+', '=', '|', '\\', '<', '>', '~', '`' };
 
     /// <summary>
-    /// Finds the start of a word by looking backwards from the given position
-    /// </summary>
-    private static int FindWordStart(string input, int position)
-    {
-        int wordStart = position - 1;
-        while (wordStart >= 0 && Array.IndexOf(WordBoundaries, input[wordStart]) == -1)
-        {
-            wordStart--;
-        }
-        return wordStart + 1; // Move to the first character of the word
-    }
-
-    /// <summary>
-    /// Finds the end of a word by looking forwards from the given position
-    /// </summary>
-    private static int FindWordEnd(string input, int position)
-    {
-        int wordEnd = position;
-        while (wordEnd < input.Length && Array.IndexOf(WordBoundaries, input[wordEnd]) == -1)
-        {
-            wordEnd++;
-        }
-        return wordEnd;
-    }
-
-    /// <summary>
-    /// Checks if the cursor is at the end of a word or at a word boundary
-    /// </summary>
-    private static bool IsAtEndOfWord(string input, int position)
-    {
-        return position >= input.Length || Array.IndexOf(WordBoundaries, input[position]) != -1;
-    }
-
-    /// <summary>
     /// Reads a line, but if EscapingReturnsTheOriginalInput is false, and escaping. will function return null. 
     /// </summary>
     /// <param name="prefillText"></param>
@@ -67,7 +33,7 @@ public static class JRead
     {
         return ReadInternal(prefillText, options, "");
     }
-    
+
     /// <summary>
     /// Reads a line, but will not return null.
     /// </summary>
@@ -79,7 +45,7 @@ public static class JRead
     {
         return ReadInternal(prefillText, options, beginningText) ?? string.Empty;
     }
-    
+
     /// <summary>
     /// Reads a line, but will not return null.
     /// </summary>
@@ -343,7 +309,7 @@ public static class JRead
                     var comparison = options.AutoCompleteCaseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
                     var match = options.AutoCompleteItems
                         .FirstOrDefault(item => item.StartsWith(currentWord, comparison));
-                    
+
                     if (match != null && match.Length > currentWord.Length)
                     {
                         autoCompleteSuggestion = match.Substring(currentWord.Length);
@@ -408,17 +374,17 @@ public static class JRead
             int remainingSpace = availableSpace - Console.CursorLeft + originalPos.Left;
             if (remainingSpace > 0)
             {
-                string suggestionToShow = autoCompleteSuggestion.Length > remainingSpace 
+                string suggestionToShow = autoCompleteSuggestion.Length > remainingSpace
                     ? autoCompleteSuggestion.Substring(0, remainingSpace)
                     : autoCompleteSuggestion;
 
                 // Store original colors
                 ConsoleColor originalFg = Console.ForegroundColor;
-                
+
                 // Set grey color for suggestion
                 Console.ForegroundColor = ConsoleColor.DarkGray;
                 Console.Write(suggestionToShow);
-                
+
                 // Restore original color
                 Console.ForegroundColor = originalFg;
             }
@@ -429,7 +395,7 @@ public static class JRead
         int spaceForAfter = availableSpace - (currentPos - originalPos.Left);
         if (spaceForAfter > 0 && !string.IsNullOrEmpty(visibleAfterCursor))
         {
-            string afterToShow = visibleAfterCursor.Length > spaceForAfter 
+            string afterToShow = visibleAfterCursor.Length > spaceForAfter
                 ? visibleAfterCursor.Substring(0, spaceForAfter)
                 : visibleAfterCursor;
             Console.Write(afterToShow);
@@ -464,5 +430,39 @@ public static class JRead
             return string.Empty;
 
         return input.Substring(wordStart, length);
+    }
+
+    /// <summary>
+    /// Finds the start of a word by looking backwards from the given position
+    /// </summary>
+    private static int FindWordStart(string input, int position)
+    {
+        int wordStart = position - 1;
+        while (wordStart >= 0 && Array.IndexOf(WordBoundaries, input[wordStart]) == -1)
+        {
+            wordStart--;
+        }
+        return wordStart + 1; // Move to the first character of the word
+    }
+
+    /// <summary>
+    /// Finds the end of a word by looking forwards from the given position
+    /// </summary>
+    private static int FindWordEnd(string input, int position)
+    {
+        int wordEnd = position;
+        while (wordEnd < input.Length && Array.IndexOf(WordBoundaries, input[wordEnd]) == -1)
+        {
+            wordEnd++;
+        }
+        return wordEnd;
+    }
+
+    /// <summary>
+    /// Checks if the cursor is at the end of a word or at a word boundary
+    /// </summary>
+    private static bool IsAtEndOfWord(string input, int position)
+    {
+        return position >= input.Length || Array.IndexOf(WordBoundaries, input[position]) != -1;
     }
 }

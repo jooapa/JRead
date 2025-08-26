@@ -84,11 +84,25 @@ public static class JRead
         // get if global or local history
         JReadHistory history = options.CustomHistory ?? History;
 
+        // Track terminal size for resize detection
+        int lastWindowWidth = Console.WindowWidth;
+        int lastWindowHeight = Console.WindowHeight;
+
         // Write initial input
         DrawLine(input, cursorPosition, options);
 
         do
         {
+            // Check for terminal resize before reading key
+            if (Console.WindowWidth != lastWindowWidth || Console.WindowHeight != lastWindowHeight)
+            {
+                lastWindowWidth = Console.WindowWidth;
+                lastWindowHeight = Console.WindowHeight;
+                Console.WriteLine("asdasdads");
+                // Redraw the line after resize
+                DrawLine(input, cursorPosition, options);
+            }
+
             key = Console.ReadKey(true);
 
             switch (key.Key)
@@ -180,26 +194,38 @@ public static class JRead
                     break;
 
                 case ConsoleKey.LeftArrow:
-                    if (cursorPosition > 0)
+                    if (IsCtrlKeyPressed(key))
+                    {
+                        // go to start of word
+                        cursorPosition = FindWordStart(input, cursorPosition);
+                        DrawLine(input, cursorPosition, options);
+                    }
+                    else if (cursorPosition > 0)
                     {
                         cursorPosition--;
-                        Console.SetCursorPosition(Console.CursorLeft - 1, Console.CursorTop);
+                        DrawLine(input, cursorPosition, options);
                     }
                     break;
                 case ConsoleKey.RightArrow:
-                    if (cursorPosition < input.Length)
+                    if (IsCtrlKeyPressed(key))
+                    {
+                        // go to end of word
+                        cursorPosition = FindWordEnd(input, cursorPosition);
+                        DrawLine(input, cursorPosition, options);
+                    }
+                    else if (cursorPosition < input.Length)
                     {
                         cursorPosition++;
-                        Console.SetCursorPosition(Console.CursorLeft + 1, Console.CursorTop);
+                        DrawLine(input, cursorPosition, options);
                     }
                     break;
                 case ConsoleKey.Home:
                     cursorPosition = 0;
-                    Console.SetCursorPosition(options._cursorPos.Left, options._cursorPos.Top);
+                    DrawLine(input, cursorPosition, options);
                     break;
                 case ConsoleKey.End:
                     cursorPosition = input.Length;
-                    Console.SetCursorPosition(options._cursorPos.Left + input.Length, options._cursorPos.Top);
+                    DrawLine(input, cursorPosition, options);
                     break;
                 case ConsoleKey.W:
                     if (IsCtrlKeyPressed(key))
@@ -273,20 +299,33 @@ public static class JRead
         } while (true);
     }
 
+    private static void SafeSetCursorPosition(int left, int top)
+    {
+        // Ensure coordinates are within valid bounds
+        left = Math.Max(0, Math.Min(left, Console.WindowWidth - 1));
+        top = Math.Max(0, Math.Min(top, Console.WindowHeight - 1));
+        
+        try
+        {
+            Console.SetCursorPosition(left, top);
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+            // If still fails, try to position at origin
+            try
+            {
+                Console.SetCursorPosition(0, Math.Max(0, Console.CursorTop));
+            }
+            catch
+            {
+                // Last resort - do nothing
+            }
+        }
+    }
+
     private static void DrawLine(string input, int cursorDelPosition, JReadOptions options)
     {
         CursorPos originalPos = options._cursorPos;
-
-        Console.SetCursorPosition(originalPos.Left, originalPos.Top);
-
-        // Calculate available space from original position to end of line
-        int availableSpace = Console.WindowWidth - originalPos.Left;
-
-        // Clear from original position to end of line
-        Console.Write(new string(' ', availableSpace));
-
-        // Go back to original position
-        Console.SetCursorPosition(originalPos.Left, originalPos.Top);
 
         // Convert newlines to visible characters for display
         string ConvertNewlinesToVisible(string text)
@@ -318,102 +357,131 @@ public static class JRead
             }
         }
 
-        // Split input into parts: before cursor, and after cursor
-        string beforeCursor = input.Substring(0, cursorDelPosition);
-        string afterCursor = input.Substring(cursorDelPosition);
-
-        // Convert to visible format
-        string visibleBeforeCursor = ConvertNewlinesToVisible(beforeCursor);
-        string visibleAfterCursor = ConvertNewlinesToVisible(afterCursor);
-
-        // Calculate total length with suggestion
-        int totalLength = visibleBeforeCursor.Length + autoCompleteSuggestion.Length + visibleAfterCursor.Length;
-
-        string displayText;
-        int displayCursorPos;
-
-        if (totalLength > availableSpace - 3) // Need to truncate
+        // Convert input to visible format
+        string visibleInput = ConvertNewlinesToVisible(input);
+        
+        // Calculate available space from original position to end of line
+        int availableWidth = Console.WindowWidth - originalPos.Left;
+        
+        // Clear the current line from the original position
+        SafeSetCursorPosition(originalPos.Left, originalPos.Top);
+        if (availableWidth > 0)
         {
-            // Show "..." and try to keep cursor area visible
-            if (visibleBeforeCursor.Length > availableSpace / 2)
+            Console.Write(new string(' ', availableWidth));
+        }
+        
+        // Return to original position
+        SafeSetCursorPosition(originalPos.Left, originalPos.Top);
+        
+        // If text fits in available space, show everything
+        int totalLength = visibleInput.Length + autoCompleteSuggestion.Length;
+        if (totalLength <= availableWidth)
+        {
+            // Split input at cursor position for proper cursor placement
+            string beforeCursor = ConvertNewlinesToVisible(input.Substring(0, cursorDelPosition));
+            string afterCursor = ConvertNewlinesToVisible(input.Substring(cursorDelPosition));
+            
+            // Write text before cursor
+            Console.Write(beforeCursor);
+            
+            // Save cursor position
+            int cursorLeft = Console.CursorLeft;
+            int cursorTop = Console.CursorTop;
+            
+            // Write autocomplete suggestion in gray
+            if (!string.IsNullOrEmpty(autoCompleteSuggestion))
             {
-                // Truncate from the beginning
-                int keepLength = availableSpace - 3 - autoCompleteSuggestion.Length - Math.Min(visibleAfterCursor.Length, availableSpace / 4);
-                if (keepLength > 0)
+                ConsoleColor originalFg = Console.ForegroundColor;
+                Console.ForegroundColor = ConsoleColor.DarkGray;
+                Console.Write(autoCompleteSuggestion);
+                Console.ForegroundColor = originalFg;
+            }
+            
+            // Write text after cursor
+            Console.Write(afterCursor);
+            
+            // Position cursor at the right place with bounds checking
+            SafeSetCursorPosition(cursorLeft, cursorTop);
+        }
+        else if (availableWidth > 6) // Need at least 6 characters for meaningful truncation with "..."
+        {
+            // Text doesn't fit, need to truncate intelligently
+            string beforeCursor = ConvertNewlinesToVisible(input.Substring(0, cursorDelPosition));
+            string afterCursor = ConvertNewlinesToVisible(input.Substring(cursorDelPosition));
+            
+            // Calculate how much space to show before and after cursor
+            int spaceForEllipsis = 3; // "..." takes 3 characters
+            int spaceForContent = availableWidth - spaceForEllipsis;
+            
+            // Try to show some context before and after cursor
+            int beforeCursorLength = Math.Min(beforeCursor.Length, spaceForContent / 2);
+            int afterCursorLength = Math.Min(afterCursor.Length, spaceForContent - beforeCursorLength);
+            
+            // Adjust if we have extra space
+            if (beforeCursorLength + afterCursorLength < spaceForContent)
+            {
+                if (beforeCursor.Length > beforeCursorLength)
                 {
-                    int startIndex = visibleBeforeCursor.Length - keepLength;
-                    string truncatedBefore = "..." + visibleBeforeCursor.Substring(startIndex);
-                    displayText = truncatedBefore;
-                    displayCursorPos = truncatedBefore.Length;
+                    beforeCursorLength = Math.Min(beforeCursor.Length, spaceForContent - afterCursorLength);
                 }
-                else
+                else if (afterCursor.Length > afterCursorLength)
                 {
-                    displayText = "...";
-                    displayCursorPos = 3;
+                    afterCursorLength = Math.Min(afterCursor.Length, spaceForContent - beforeCursorLength);
                 }
             }
-            else
+            
+            // Determine what to show
+            bool showStartEllipsis = cursorDelPosition > beforeCursorLength;
+            bool showEndEllipsis = (cursorDelPosition + afterCursorLength) < visibleInput.Length;
+            
+            // Build the display string
+            string displayText = "";
+            int displayCursorPos = 0;
+            
+            if (showStartEllipsis)
             {
-                displayText = visibleBeforeCursor;
-                displayCursorPos = visibleBeforeCursor.Length;
+                displayText += "...";
+                displayCursorPos = 3;
             }
+            
+            // Add text before cursor
+            if (beforeCursorLength > 0)
+            {
+                int startIndex = showStartEllipsis ? 
+                    Math.Max(0, cursorDelPosition - beforeCursorLength) : 0;
+                string textBefore = beforeCursor.Substring(Math.Max(0, beforeCursor.Length - beforeCursorLength));
+                displayText += textBefore;
+                displayCursorPos += textBefore.Length;
+            }
+            
+            // Add text after cursor
+            if (afterCursorLength > 0)
+            {
+                string textAfter = afterCursor.Substring(0, Math.Min(afterCursor.Length, afterCursorLength));
+                displayText += textAfter;
+            }
+            
+            if (showEndEllipsis)
+            {
+                displayText += "...";
+            }
+            
+            // Write the truncated text
+            Console.Write(displayText.Substring(0, Math.Min(displayText.Length, availableWidth)));
+            
+            // Position cursor correctly with bounds checking
+            SafeSetCursorPosition(originalPos.Left + displayCursorPos, originalPos.Top);
         }
         else
         {
-            // Everything fits
-            displayText = visibleBeforeCursor;
-            displayCursorPos = visibleBeforeCursor.Length;
-        }
-
-        // Write the text before cursor
-        Console.Write(displayText);
-
-        // Write autocomplete suggestion in grey right at cursor position
-        if (!string.IsNullOrEmpty(autoCompleteSuggestion))
-        {
-            int remainingSpace = availableSpace - Console.CursorLeft + originalPos.Left;
-            if (remainingSpace > 0)
+            // Terminal too narrow, just show cursor position indicator
+            string indicator = cursorDelPosition.ToString();
+            if (indicator.Length <= availableWidth)
             {
-                string suggestionToShow = autoCompleteSuggestion.Length > remainingSpace
-                    ? autoCompleteSuggestion.Substring(0, remainingSpace)
-                    : autoCompleteSuggestion;
-
-                // Store original colors
-                ConsoleColor originalFg = Console.ForegroundColor;
-
-                // Set grey color for suggestion
-                Console.ForegroundColor = ConsoleColor.DarkGray;
-                Console.Write(suggestionToShow);
-
-                // Restore original color
-                Console.ForegroundColor = originalFg;
+                Console.Write(indicator);
+                SafeSetCursorPosition(originalPos.Left + indicator.Length, originalPos.Top);
             }
         }
-
-        // Write the text after cursor (if there's space)
-        int currentPos = Console.CursorLeft;
-        int spaceForAfter = availableSpace - (currentPos - originalPos.Left);
-        if (spaceForAfter > 0 && !string.IsNullOrEmpty(visibleAfterCursor))
-        {
-            string afterToShow = visibleAfterCursor.Length > spaceForAfter
-                ? visibleAfterCursor.Substring(0, spaceForAfter)
-                : visibleAfterCursor;
-            Console.Write(afterToShow);
-        }
-
-        // Position cursor correctly
-        int targetLeft = originalPos.Left + displayCursorPos;
-
-        // Clamp targetLeft to valid range
-        if (targetLeft < 0) targetLeft = 0;
-        if (targetLeft >= Console.WindowWidth) targetLeft = Console.WindowWidth - 1;
-
-        // Clamp originalPos.Top to valid range
-        int targetTop = originalPos.Top;
-        if (targetTop < 0) targetTop = 0;
-        if (targetTop >= Console.BufferHeight) targetTop = Console.BufferHeight - 1;
-
-        Console.SetCursorPosition(targetLeft, targetTop);
     }
 
     private static string GetCurrentWord(string input, int cursorPosition)
@@ -434,28 +502,61 @@ public static class JRead
 
     /// <summary>
     /// Finds the start of a word by looking backwards from the given position
+    /// Handles spaces intelligently for word navigation
     /// </summary>
     private static int FindWordStart(string input, int position)
     {
-        int wordStart = position - 1;
-        while (wordStart >= 0 && Array.IndexOf(WordBoundaries, input[wordStart]) == -1)
+        if (position <= 0) return 0;
+        
+        // Start from the character before the cursor
+        int current = position - 1;
+        
+        // If we're starting on a word boundary (like space), skip backwards through word boundaries
+        if (current >= 0 && Array.IndexOf(WordBoundaries, input[current]) != -1)
         {
-            wordStart--;
+            // Skip backwards through word boundaries (spaces, punctuation, etc.)
+            while (current >= 0 && Array.IndexOf(WordBoundaries, input[current]) != -1)
+            {
+                current--;
+            }
         }
-        return wordStart + 1; // Move to the first character of the word
+        
+        // Now skip backwards through the word characters to find the start
+        while (current >= 0 && Array.IndexOf(WordBoundaries, input[current]) == -1)
+        {
+            current--;
+        }
+        
+        return current + 1; // Move to the first character of the word
     }
 
     /// <summary>
     /// Finds the end of a word by looking forwards from the given position
+    /// Handles spaces intelligently for word navigation
     /// </summary>
     private static int FindWordEnd(string input, int position)
     {
-        int wordEnd = position;
-        while (wordEnd < input.Length && Array.IndexOf(WordBoundaries, input[wordEnd]) == -1)
+        if (position >= input.Length) return input.Length;
+        
+        int current = position;
+        
+        // If we're starting on a word boundary (like space), skip forward through word boundaries
+        if (current < input.Length && Array.IndexOf(WordBoundaries, input[current]) != -1)
         {
-            wordEnd++;
+            // Skip forward through word boundaries (spaces, punctuation, etc.)
+            while (current < input.Length && Array.IndexOf(WordBoundaries, input[current]) != -1)
+            {
+                current++;
+            }
         }
-        return wordEnd;
+        
+        // Now skip forward through the word characters to find the end
+        while (current < input.Length && Array.IndexOf(WordBoundaries, input[current]) == -1)
+        {
+            current++;
+        }
+        
+        return current;
     }
 
     /// <summary>

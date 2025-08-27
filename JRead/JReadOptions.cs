@@ -37,6 +37,10 @@ public class JReadOptions
     /// </summary>
     public bool EnableMaskedInput { get; set; } = false;
     public char MaskedInputChar { get; set; } = '*';
+    /// <summary>
+    /// If true, adds a new line to console. not the input but the cursor
+    /// </summary>
+    public bool NewLineOnExit { get; set; } = true;
 
     internal CursorPos _cursorPos = new();
 }

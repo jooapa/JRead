@@ -154,6 +154,10 @@ public static class JRead
                     {
                         return originalInput;
                     }
+
+                    if (options.NewLineOnExit)
+                        Console.WriteLine();
+
                     return null;
 
                 case ConsoleKey.Enter:
@@ -162,7 +166,10 @@ public static class JRead
                     {
                         history.Add(input);
                     }
-                    // Console.WriteLine();
+
+                    if (options.NewLineOnExit)
+                        Console.WriteLine();
+
                     return input;
 
                 case ConsoleKey.Backspace:

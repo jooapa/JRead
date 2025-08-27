@@ -613,6 +613,10 @@ public static class JRead
 
         // Apply MaxDisplayLength windowing if set
         int maxDisplay = options.MaxDisplayLength ?? availableWidth;
+        if (options.SubtractFromAvailableSpace && options.MaxDisplayLength.HasValue)
+        {
+            maxDisplay = Math.Max(0, availableWidth - options.MaxDisplayLength.Value);
+        }
         if (maxDisplay > 0 && visibleInput.Length > maxDisplay) {
             // Center the window around the cursor
             int windowStart = Math.Max(0, Math.Min(visibleInput.Length - maxDisplay, cursorDelPosition - maxDisplay / 2));

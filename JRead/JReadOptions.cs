@@ -49,5 +49,10 @@ public class JReadOptions
     /// </summary>
     public int? MaxDisplayLength { get; set; } = null;
 
+    /// <summary>
+    /// If true, MaxDisplayLength is subtracted from the available console width, reserving space at the end of the line.
+    /// </summary>
+    public bool SubtractFromAvailableSpace { get; set; } = false;
+
     internal CursorPos _cursorPos = new();
 }

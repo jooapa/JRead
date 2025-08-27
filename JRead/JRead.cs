@@ -610,6 +610,35 @@ public static class JRead
                 SafeSetCursorPosition(originalPos.Left + indicator.Length, originalPos.Top);
             }
         }
+
+        // Apply MaxDisplayLength windowing if set
+        int maxDisplay = options.MaxDisplayLength ?? availableWidth;
+        if (maxDisplay > 0 && visibleInput.Length > maxDisplay) {
+            // Center the window around the cursor
+            int windowStart = Math.Max(0, Math.Min(visibleInput.Length - maxDisplay, cursorDelPosition - maxDisplay / 2));
+            int windowEnd = Math.Min(visibleInput.Length, windowStart + maxDisplay);
+            string windowedInput = visibleInput.Substring(windowStart, windowEnd - windowStart);
+            int windowedCursor = cursorDelPosition - windowStart;
+            visibleInput = windowedInput;
+            cursorDelPosition = windowedCursor;
+        }
+
+        // Clear the line and redraw the windowed content
+        SafeSetCursorPosition(originalPos.Left, originalPos.Top);
+        if (availableWidth > 0)
+        {
+            Console.Write(new string(' ', availableWidth));
+        }
+        SafeSetCursorPosition(originalPos.Left, originalPos.Top);
+
+        // Write the windowed content
+        if (options.EnableMaskedInput)
+            Console.Write(new string(options.MaskedInputChar, visibleInput.Length));
+        else
+            Console.Write(visibleInput);
+
+        // Position cursor at the correct location after windowing
+        SafeSetCursorPosition(originalPos.Left + cursorDelPosition, originalPos.Top);
     }
 
     private static string GetCurrentWord(string input, int cursorPosition)

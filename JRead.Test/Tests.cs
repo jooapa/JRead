@@ -60,7 +60,9 @@ public class JReadTests
             EnableAutoComplete = true,
             AutoCompleteMinLength = 1,
             AutoCompleteCaseSensitive = true,
-            AutoCompleteItems = new List<string> { "cat", "clear", "copy", "create", "check", "Cat", "Clear", "help", "history", "list", "move", "remove" }
+            AutoCompleteItems = new List<string> { "cat", "clear", "copy", "create", "check", "Cat", "Clear", "help", "history", "list", "move", "remove" },
+            MaxDisplayLength = 30 // Only 30 characters are visible/editable at a time
+
         };
         
         while (true)

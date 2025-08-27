@@ -42,5 +42,12 @@ public class JReadOptions
     /// </summary>
     public bool NewLineOnExit { get; set; } = true;
 
+    /// <summary>
+    /// Maximum number of characters to display in the input area (windowed view).
+    /// If set, the input area will never show more than this many characters at once.
+    /// The input can be longer, but only a window of MaxDisplayLength characters is visible and editable.
+    /// </summary>
+    public int? MaxDisplayLength { get; set; } = null;
+
     internal CursorPos _cursorPos = new();
 }

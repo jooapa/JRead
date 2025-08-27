@@ -1,6 +1,6 @@
 # JRead
 
-**JRead** is the ultimate cross-platform C# console input library. For .NET 9
+**JRead** is the ultimate cross-platform C# console input library. For .NET 8
 
 ---
 

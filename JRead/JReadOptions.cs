@@ -6,6 +6,9 @@ public class JReadOptions
     /// Custom history for the JRead instance
     /// </summary>
     public JReadHistory? CustomHistory { get; set; }
+    /// <summary>
+    /// will print debug information to the console when key is pressed
+    /// </summary>
     public bool EnableDebug { get; set; } = false;
     public bool AddReturnedValueToHistory { get; set; } = true;
     /// <summary>

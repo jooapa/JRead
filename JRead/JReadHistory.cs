@@ -35,6 +35,20 @@ public class JReadHistory
         }
     }
 
+    /// <summary>
+    /// Adds a range of items to the history.
+    /// </summary>
+    /// <param name="items"></param>
+    public void AddRange(IEnumerable<string> items)
+    {
+        ArgumentNullException.ThrowIfNull(items);
+
+        foreach (var item in items)
+        {
+            Add(item);
+        }
+    }
+
     public string? Get(int index)
     {
         if (index < 0 || index >= _items.Count)
@@ -44,7 +58,7 @@ public class JReadHistory
 
     public List<string> GetAll()
     {
-        return new List<string>(_items);
+        return [.. _items];
     }
 
     public void Clear()
@@ -70,9 +84,6 @@ public class JReadHistory
 
     public JReadHistory(params string[] items)
     {
-        foreach (var item in items)
-        {
-            Add(item);
-        }
+        AddRange(items);
     }
 }

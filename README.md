@@ -4,15 +4,6 @@
 
 ---
 
-## Usage
-
-```csharp
-string Read(string startText = "", string? preText = null, JReadOptions? options = null);
-string? ReadNull(string startText = "", string? preText = null, JReadOptions? options = null);
-string Read(string? startText = null, JReadOptions? options = null);
-string? ReadNull(string? startText = null, JReadOptions? options = null);
-```
-
 ### Simple Example
 ```csharp
 using JRead;
@@ -89,6 +80,15 @@ Maximum characters to display (windowed view)
 
 **`SubtractFromAvailableSpace`** (`bool`, default: `false`)  
 Subtract MaxDisplayLength from console width
+
+## Technical Definitions
+
+```csharp
+string Read(string startText = "", string? preText = null, JReadOptions? options = null);
+string? ReadNull(string startText = "", string? preText = null, JReadOptions? options = null);
+string Read(string? startText = null, JReadOptions? options = null);
+string? ReadNull(string? startText = null, JReadOptions? options = null);
+```
 
 ## Keyboard Shortcuts
 

@@ -1,6 +1,5 @@
 namespace JRead;
 
-// Structure to hold display information
 internal struct DisplayInfo
 {
     public string BeforeCursor { get; set; }

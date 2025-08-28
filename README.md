@@ -49,21 +49,44 @@ if (password == null)
 
 ## JReadOptions Reference
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `CustomHistory` | `JReadHistory?` | `null` | Custom history instance instead of global history |
-| `EnableDebug` | `bool` | `false` | Print debug information for key presses |
-| `AddReturnedValueToHistory` | `bool` | `true` | Add the returned value to command history |
-| `EscapingReturnsTheOriginalInput` | `bool` | `true` | If true, ESC returns original input; if false, returns null |
-| `AutoCompleteItems` | `List<string>` | `[]` | List of autocomplete suggestions |
-| `EnableAutoComplete` | `bool` | `true` | Enable tab-completion functionality |
-| `AutoCompleteMinLength` | `int` | `1` | Minimum characters before showing suggestions |
-| `AutoCompleteCaseSensitive` | `bool` | `false` | Case-sensitive autocomplete matching |
-| `EnableMaskedInput` | `bool` | `false` | Mask input characters (for passwords) |
-| `MaskedInputChar` | `char` | `'*'` | Character used for masking input |
-| `NewLineOnExit` | `bool` | `true` | Add newline when input completes |
-| `MaxDisplayLength` | `int?` | `null` | Maximum characters to display (windowed view) |
-| `SubtractFromAvailableSpace` | `bool` | `false` | Subtract MaxDisplayLength from console width |
+**`CustomHistory`** (`JReadHistory?`, default: `null`)  
+Custom history instance instead of global history
+
+**`EnableDebug`** (`bool`, default: `false`)  
+Print debug information for key presses
+
+**`AddReturnedValueToHistory`** (`bool`, default: `true`)  
+Add the returned value to command history
+
+**`EscapingReturnsTheOriginalInput`** (`bool`, default: `true`)  
+If true, ESC returns original input; if false, returns null
+
+**`AutoCompleteItems`** (`List<string>`, default: `[]`)  
+List of autocomplete suggestions
+
+**`EnableAutoComplete`** (`bool`, default: `true`)  
+Enable tab-completion functionality
+
+**`AutoCompleteMinLength`** (`int`, default: `1`)  
+Minimum characters before showing suggestions
+
+**`AutoCompleteCaseSensitive`** (`bool`, default: `false`)  
+Case-sensitive autocomplete matching
+
+**`EnableMaskedInput`** (`bool`, default: `false`)  
+Mask input characters (for passwords)
+
+**`MaskedInputChar`** (`char`, default: `'*'`)  
+Character used for masking input
+
+**`NewLineOnExit`** (`bool`, default: `true`)  
+Add newline when input completes
+
+**`MaxDisplayLength`** (`int?`, default: `null`)  
+Maximum characters to display (windowed view)
+
+**`SubtractFromAvailableSpace`** (`bool`, default: `false`)  
+Subtract MaxDisplayLength from console width
 
 ## Keyboard Shortcuts
 

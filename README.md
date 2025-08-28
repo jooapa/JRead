@@ -86,8 +86,12 @@ Subtract MaxDisplayLength from console width
 ```csharp
 string Read(string startText = "", string? preText = null, JReadOptions? options = null);
 string? ReadNull(string startText = "", string? preText = null, JReadOptions? options = null);
+
 string Read(string? startText = null, JReadOptions? options = null);
 string? ReadNull(string? startText = null, JReadOptions? options = null);
+
+string Read(string? startText = null);
+string? ReadNull(string? startText = null);
 ```
 
 ## Keyboard Shortcuts

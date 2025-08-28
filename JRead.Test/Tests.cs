@@ -58,12 +58,12 @@ public class JReadTests
         var options = new JReadOptions
         {
             EnableAutoComplete = true,
-            AutoCompleteMinLength = 1,
-            AutoCompleteCaseSensitive = true,
+            // AutoCompleteMinLength = 1,
+            // AutoCompleteCaseSensitive = true,
             AutoCompleteItems = new List<string> { "cat", "clear", "copy", "create", "check", "Cat", "Clear", "help", "history", "list", "move", "remove" },
-            MaxDisplayLength = 30,
-            SubtractFromAvailableSpace = true,
-            EnableMaskedInput = true
+            // MaxDisplayLength = 30,
+            // SubtractFromAvailableSpace = true,
+            EnableMaskedInput = false
         };
         
         while (true)

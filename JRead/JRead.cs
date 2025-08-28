@@ -11,6 +11,7 @@ public static class JRead
     /// </summary>
     /// <param name="preText"></param>
     /// <param name="startText"></param>
+    /// <param name="preText"></param>
     /// <param name="options"></param>
     /// <returns></returns>
     public static string Read(string? preText = null, string startText = "", JReadOptions? options = null)
@@ -44,12 +45,12 @@ public static class JRead
     /// <summary>
     /// Reads a line, but if EscapingReturnsTheOriginalInput is false, and escaping. Function will return null. 
     /// </summary>
-    /// <param name="preText"></param>
+    /// <param name="startText"></param>
     /// <param name="options"></param>
     /// <returns></returns>
-    public static string? ReadNull(string? preText, JReadOptions options)
+    public static string? ReadNull(string startText, JReadOptions options)
     {
-        return Reader.ReadInternal(preText, options, "");
+        return Reader.ReadInternal(null, options, startText);
     }
 
     /// <summary>

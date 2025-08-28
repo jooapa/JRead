@@ -30,7 +30,7 @@ public class JReadTests
         };
 
         Console.SetCursorPosition(10, Console.GetCursorPosition().Top);
-        string? output = JRead.Read("kakka ", "> ", opt);
+        string? output = JRead.Read("> ", "kakka ", opt);
         Console.WriteLine($"\nOutput: {output}");
         Console.WriteLine($"Global History: [{string.Join(", ", JRead.History.GetAll())}]");
         Console.WriteLine($"Custom History: [{string.Join(", ", opt.CustomHistory.GetAll())}]");
@@ -48,7 +48,7 @@ public class JReadTests
         
         while (true)
         {
-            string result = JRead.Read("","Auto Complete> ", options);
+            string result = JRead.Read("Auto Complete> ", "", options);
             Console.WriteLine($"You entered: {result}");
         }
     }
@@ -68,7 +68,7 @@ public class JReadTests
         
         while (true)
         {
-            string result = JRead.Read("","CaseSensitive> ", options);
+            string result = JRead.Read("CaseSensitive> ", "", options);
             Console.WriteLine($"You entered: {result}");
         }
     }

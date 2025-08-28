@@ -24,7 +24,7 @@ public static class JRead
     /// <param name="preText"></param>
     /// <param name="options"></param>
     /// <returns></returns>
-    public static string Read(string? preText, JReadOptions options)
+    public static string Read(string? preText, JReadOptions? options)
     {
         return Reader.ReadInternal(preText, options, "") ?? string.Empty;
     }
@@ -47,7 +47,7 @@ public static class JRead
     /// <param name="startText"></param>
     /// <param name="options"></param>
     /// <returns></returns>
-    public static string? ReadNull(string startText, JReadOptions options)
+    public static string? ReadNull(string startText, JReadOptions? options)
     {
         return Reader.ReadInternal(null, options, startText);
     }

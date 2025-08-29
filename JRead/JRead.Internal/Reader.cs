@@ -260,8 +260,9 @@ internal static class Reader
 
                             DrawLine(input, cursorPosition, options);
                         }
+                        break;
                     }
-                    break;
+                    goto default;
                 case ConsoleKey.Y:
                     if (IsCtrlKeyPressed(key))
                     {
@@ -283,8 +284,9 @@ internal static class Reader
 
                             DrawLine(input, cursorPosition, options);
                         }
+                        break;
                     }
-                    break;
+                    goto default;
                 case ConsoleKey.W:
                     if (IsCtrlKeyPressed(key))
                     {
@@ -303,8 +305,9 @@ internal static class Reader
                             cursorPosition = wordStart;
                             DrawLine(input, cursorPosition, options);
                         }
+                        break;
                     }
-                    break;
+                    goto default;
                 case ConsoleKey.Tab:
                     if (_enableAutoComplete && options.AutoCompleteItems.Count > 0)
                     {

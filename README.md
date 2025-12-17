@@ -109,15 +109,3 @@ string? ReadNull(string? startText = null);
 | `Tab` | Autocomplete (if enabled) |
 | `Enter` | Submit input |
 | `Escape` | Cancel or return original (based on options) |
-
-## Features
-
-- **Line Editing:** Insert, delete, overwrite text anywhere in the input line
-- **Cursor Movement:** Move cursor by character, word, or to start/end of line  
-- **Autocompletion:** Tab-complete words with customizable suggestions
-- **Undo/Redo:** Full undo/redo support with Ctrl+U/Z and Ctrl+Y
-- **Masked Input:** Hide input for passwords or sensitive data
-- **Command History:** Navigate through previous inputs with Up/Down arrows
-- **Terminal Resize Support:** Handles terminal resizing gracefully
-- **Cross-Platform:** Works on Windows, Linux, and macOS
-- **Customizable Options:** Extensive configuration through JReadOptions

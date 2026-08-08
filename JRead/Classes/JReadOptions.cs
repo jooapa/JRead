@@ -20,12 +20,12 @@ public class JReadOptions
     /// List of autocomplete suggestions
     /// </summary>
     public List<string> AutoCompleteItems { get; set; } = new List<string>();
-    
+
     /// <summary>
     /// If true, shows autocomplete suggestions in grey text
     /// </summary>
     public bool EnableAutoComplete { get; set; } = true;
-    
+
     /// <summary>
     /// Minimum characters before showing autocomplete suggestions
     /// </summary>
@@ -56,6 +56,18 @@ public class JReadOptions
     /// If true, MaxDisplayLength is subtracted from the available console width, reserving space at the end of the line.
     /// </summary>
     public bool SubtractFromAvailableSpace { get; set; } = false;
+
+    /// <summary>
+    /// Callback invoked when the up arrow is pressed. Return a new string to replace the input,
+    /// or null to fall through to the default history navigation.
+    /// </summary>
+    public Func<string, string?>? OnUpArrow { get; set; }
+
+    /// <summary>
+    /// Callback invoked when the down arrow is pressed. Return a new string to replace the input,
+    /// or null to fall through to the default history navigation.
+    /// </summary>
+    public Func<string, string?>? OnDownArrow { get; set; }
 
     internal CursorPos _cursorPos = new();
 }

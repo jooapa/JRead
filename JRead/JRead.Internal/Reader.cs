@@ -149,6 +149,20 @@ internal static class Reader
                     }
                     break;
                 case ConsoleKey.UpArrow:
+                    if (options.OnUpArrow != null)
+                    {
+                        string? callbackResult = options.OnUpArrow(input);
+                        if (callbackResult != null)
+                        {
+                            SaveStateForUndo();
+                            historyIndex = -1;
+                            input = callbackResult;
+                            cursorPosition = input.Length;
+                            DrawLine(input, cursorPosition, options);
+                            break;
+                        }
+                    }
+
                     if (history.Count > 0)
                     {
                         if (historyIndex == -1)
@@ -176,6 +190,20 @@ internal static class Reader
                     break;
 
                 case ConsoleKey.DownArrow:
+                    if (options.OnDownArrow != null)
+                    {
+                        string? callbackResult = options.OnDownArrow(input);
+                        if (callbackResult != null)
+                        {
+                            SaveStateForUndo();
+                            historyIndex = -1;
+                            input = callbackResult;
+                            cursorPosition = input.Length;
+                            DrawLine(input, cursorPosition, options);
+                            break;
+                        }
+                    }
+
                     if (history.Count > 0 && historyIndex != -1)
                     {
                         // Save current state before changing
